@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+
+<AnchorPane prefHeight="400.0" prefWidth="494.0"
+            xmlns="http://javafx.com/javafx/11.0.1"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="Main.Login">
+   <children>
+      <Label layoutX="116.0" layoutY="34.0" text="Sequeira Scheduler">
+         <font>
+            <Font size="31.0" />
+         </font>
+      </Label>
+      <Label layoutX="351.0" layoutY="90.0" text="v1.95" />
+      <TextField fx:id="usernameTextField" layoutX="173.0" layoutY="159.0" promptText="Enter username" />
+      <TextField fx:id="passwordTextField" layoutX="173.0" layoutY="208.0" promptText="Enter password" />
+      <Label layoutX="116.0" layoutY="163.0" text="Username" />
+      <Label layoutX="118.0" layoutY="212.0" text="Password" />
+      <Button fx:id="loginButton" layoutX="225.0" layoutY="257.0" mnemonicParsing="false" onAction="#onLoginButton" text="Login" />
+      <Label fx:id="errorLabel" alignment="CENTER" contentDisplay="CENTER" layoutX="77.0" layoutY="306.0" prefHeight="67.0" prefWidth="340.0" textAlignment="CENTER" />
+      <Label fx:id="userLocation" layoutX="179.0" layoutY="107.0" prefHeight="25.0" prefWidth="136.0" />
+   </children>
+</AnchorPane>

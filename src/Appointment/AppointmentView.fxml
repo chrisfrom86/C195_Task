@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<AnchorPane prefHeight="594.0" prefWidth="1232.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Appointment.AppointmentView">
+   <children>
+      <TableView fx:id="apptTableView" layoutX="31.0" layoutY="98.0" prefHeight="382.0" prefWidth="1167.0">
+        <columns>
+          <TableColumn fx:id="apptIDColumn" prefWidth="55.0" text="ID" />
+          <TableColumn fx:id="apptTitleColumn" prefWidth="95.0" text="Title" />
+            <TableColumn fx:id="apptDescriptionColumn" prefWidth="183.0" text="Description" />
+            <TableColumn fx:id="apptLocationColumn" prefWidth="111.0" text="Location" />
+            <TableColumn fx:id="apptContactColumn" prefWidth="151.0" text="Contact" />
+            <TableColumn fx:id="apptTypeColumn" prefWidth="180.0" text="Type" />
+            <TableColumn fx:id="apptStartColumn" prefWidth="122.0" text="Start" />
+            <TableColumn fx:id="apptEndColumn" prefWidth="137.0" text="End" />
+            <TableColumn fx:id="apptCustomerIDColumn" prefWidth="72.0" text="Customer" />
+            <TableColumn fx:id="apptUserIDColumn" prefWidth="60.0" text="User" />
+        </columns>
+      </TableView>
+      <Label layoutX="33.0" layoutY="50.0" text="View appointments for the next:">
+         <font>
+            <Font size="14.0" />
+         </font>
+      </Label>
+      <Label layoutX="30.0" layoutY="18.0" text="Sequeira Scheduler v1.95 - Appointment View">
+         <font>
+            <Font size="18.0" />
+         </font>
+      </Label>
+      <RadioButton fx:id="apptMonthViewRadioButton" layoutX="32.0" layoutY="73.0" mnemonicParsing="false" onAction="#onApptMonthViewRadioButton" prefHeight="9.0" prefWidth="67.0" text="Month" toggleGroup="$apptView">
+         <font>
+            <Font size="14.0" />
+         </font>
+         <toggleGroup>
+            <ToggleGroup fx:id="apptView" />
+         </toggleGroup>
+      </RadioButton>
+      <RadioButton fx:id="apptWeekViewRadioButton" layoutX="105.0" layoutY="73.0" mnemonicParsing="false" onAction="#onApptWeekViewRadioButton" text="Week" toggleGroup="$apptView">
+         <font>
+            <Font size="14.0" />
+         </font>
+      </RadioButton>
+      <Label fx:id="errorLabel" alignment="CENTER" contentDisplay="CENTER" layoutX="418.0" layoutY="513.0" prefHeight="72.0" prefWidth="396.0" textAlignment="CENTER" />
+      <Button fx:id="addApptButton" layoutX="813.0" layoutY="488.0" mnemonicParsing="false" onAction="#onAddApptButton" text="Add Appointment" />
+      <Button fx:id="modifyApptButton" layoutX="936.0" layoutY="488.0" mnemonicParsing="false" onAction="#onModifyApptButton" text="Modify Appointment" />
+      <Button fx:id="deleteApptButton" layoutX="1074.0" layoutY="488.0" mnemonicParsing="false" onAction="#onDeleteApptButton" text="Delete Appointment" />
+      <Button fx:id="calcTotalApptsButton" layoutX="850.0" layoutY="51.0" mnemonicParsing="false" onAction="#onCalcTotalApptsButton" text="Calculate Total Appointments" />
+      <ComboBox layoutX="541.0" layoutY="12.0" prefWidth="150.0" promptText="Select Month" />
+      <ComboBox layoutX="708.0" layoutY="12.0" prefWidth="150.0" promptText="Select Type" />
+      <Button fx:id="apptViewAllButton" layoutX="178.0" layoutY="71.0" mnemonicParsing="false" onAction="#onApptViewAllButton" text="View All" />
+      <Label fx:id="totalApptsLabel" layoutX="541.0" layoutY="50.0" prefHeight="27.0" prefWidth="300.0" />
+      <ComboBox layoutX="874.0" layoutY="12.0" prefWidth="150.0" promptText="Select Location" />
+      <Button fx:id="logoutButton" layoutX="1144.0" layoutY="549.0" mnemonicParsing="false" onAction="#onLogoutButton" text="Logout" />
+   </children>
+</AnchorPane>
