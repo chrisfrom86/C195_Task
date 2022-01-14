@@ -6,17 +6,17 @@
 
 <AnchorPane prefHeight="376.0" prefWidth="713.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Appointment.ModifyAppointment">
     <children>
-        <Label layoutX="41.0" layoutY="29.0" text="Add Appointment">
+        <Label layoutX="41.0" layoutY="29.0" text="Modify Appointment">
             <font>
                 <Font size="20.0" />
             </font>
         </Label>
-        <TextField fx:id="apptIDTextField" disable="true" layoutX="148.0" layoutY="99.0" promptText="ID Auto-generated" />
+        <TextField fx:id="apptIDTextField" layoutX="148.0" layoutY="99.0" promptText="ID Auto-generated" />
         <TextField fx:id="apptTitleTextField" layoutX="148.0" layoutY="137.0" promptText="Appointment title" />
         <TextField fx:id="apptDescriptionTextField" layoutX="148.0" layoutY="177.0" promptText="Appointment description" />
         <TextField fx:id="apptTypeTextField" layoutX="148.0" layoutY="261.0" promptText="Appointment type" />
         <DatePicker fx:id="apptStartDatePicker" layoutX="444.0" layoutY="99.0" promptText="Select start date" />
-        <ComboBox fx:id="apptStartHourComboBox" layoutX="444.0" layoutY="137.0" prefHeight="25.0" prefWidth="71.0" promptText="Hour" />
+        <ComboBox fx:id="apptStartComboBox" layoutX="444.0" layoutY="137.0" prefHeight="25.0" prefWidth="114.0" promptText="Start" />
         <Button fx:id="apptSaveButton" layoutX="475.0" layoutY="322.0" mnemonicParsing="false" onAction="#onApptSaveButton" text="Save Appointment" />
         <Button fx:id="apptCancelButton" layoutX="610.0" layoutY="322.0" mnemonicParsing="false" onAction="#onApptCancelButton" text="Cancel" />
         <TextField fx:id="apptCustomerIDTextField" disable="true" layoutX="446.0" layoutY="220.0" promptText="Customer ID" />
@@ -53,7 +53,6 @@
                 <Font size="14.0" />
             </font>
         </Label>
-        <ComboBox fx:id="apptStartMinComboBox" layoutX="520.0" layoutY="137.0" prefHeight="25.0" prefWidth="71.0" promptText="Min" />
         <Label layoutX="357.0" layoutY="140.0" text="Start Time">
             <font>
                 <Font size="14.0" />
@@ -64,8 +63,7 @@
                 <Font size="14.0" />
             </font>
         </Label>
-        <ComboBox fx:id="apptLengthHourComboBox" layoutX="442.0" layoutY="177.0" prefHeight="25.0" prefWidth="71.0" promptText="Hour" />
-        <ComboBox fx:id="apptLengthMinComboBox" layoutX="518.0" layoutY="177.0" prefHeight="25.0" prefWidth="71.0" promptText="Min" />
+        <ComboBox fx:id="apptEndComboBox" layoutX="442.0" layoutY="177.0" prefHeight="25.0" prefWidth="114.0" promptText="End" />
         <Label layoutX="358.0" layoutY="223.0" text="Customer ID">
             <font>
                 <Font size="14.0" />

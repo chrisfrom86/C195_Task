@@ -28,7 +28,12 @@ public class Login implements Initializable {
 
     }
 
+    public void onLoginButton() {
+
+    }
+
     public void onLoginButton(ActionEvent event) throws IOException {
+        DB.makeConnection();
         String username = usernameTextField.getText();
         System.out.println(username);
         String password = passwordTextField.getText();
@@ -40,11 +45,7 @@ public class Login implements Initializable {
             Stage stage = (Stage) loginButton.getScene().getWindow();
             stage.close();
 
-            Parent root = FXMLLoader.load(getClass().getResource("/Appointment/AppointmentView.fxml"));
-            Stage login = new Stage();
-            login.setTitle("Sequeira Scheduler - WGU C195 PA Task");
-            login.setScene(new Scene(root));
-            login.show();
+            showApptView();
         } else if (username.equals("chris")) {
             System.out.println("missing username or password");
             errorLabel.setOpacity(1.0);
@@ -56,5 +57,12 @@ public class Login implements Initializable {
             }
         }
 
+        public static void showApptView() throws IOException {
+            Parent root = FXMLLoader.load(Login.class.getResource("/Appointment/AppointmentView.fxml"));
+            Stage apptView = new Stage();
+            apptView.setTitle("Sequeira Scheduler - WGU C195 PA Task");
+            apptView.setScene(new Scene(root));
+            apptView.show();
+        }
 
     }

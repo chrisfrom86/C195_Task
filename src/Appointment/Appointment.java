@@ -1,95 +1,40 @@
 package Appointment;
 
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+
 import java.sql.Date;
+import java.sql.Timestamp;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 public class Appointment {
-    public static int apptID;
-    public static String apptTitle;
-    public static String apptDescription;
-    public static String apptLocation;
-    public static String apptContact;
-    public static String apptType;
-    public static LocalDateTime apptStart;
-    public static LocalDateTime apptEnd;
-    public static int apptCustomerID;
-    public static int apptUserID;
+    public IntegerProperty apptID;
+    public String apptTitle;
+    public String apptDescription;
+    public String apptLocation;
+    public String apptContact;
+    public String apptType;
+    public Timestamp apptStart;
+    public Timestamp apptEnd;
+    public SimpleIntegerProperty apptCustomerID;
+    public SimpleIntegerProperty apptUserID;
 
-    public Appointment(int apptID,
-                       String apptTitle,
-                       String apptDescription,
-                       String apptLocation,
-                       String apptContact,
-                       String apptType,
-                       LocalDateTime apptStart,
-                       LocalDateTime apptEnd,
-                       int apptCustomerID,
-                       int apptUserID) {
-        this.apptID = apptID;
-        this.apptTitle = apptTitle;
-        this.apptDescription = apptDescription;
-        this.apptLocation = apptLocation;
-        this.apptContact = apptContact;
-        this.apptType = apptType;
+    public Appointment() {
+        this.apptID = new SimpleIntegerProperty();
+        this.apptTitle = new String();
+        this.apptDescription = new String();
+        this.apptLocation = new String();
+        this.apptContact = new String();
+        this.apptType = new String();
         this.apptStart = apptStart;
         this.apptEnd = apptEnd;
-        this.apptCustomerID = apptCustomerID;
-        this.apptUserID = apptUserID;
+        this.apptCustomerID = new SimpleIntegerProperty();
+        this.apptUserID = new SimpleIntegerProperty();
     }
 
-    public void getApptStartTime(LocalDate date, int startHour, int startMin) {
-        Date.valueOf(date);
-    LocalTime.of(startHour, startMin);
-    }
-
-    public void getApptEndTime(LocalDate date, int endHour, int endMin) {
-
-    }
-
-    public static int getApptID() {
-        return apptID;
-    }
-
-    public static String getApptTitle() {
-        return apptTitle;
-    }
-
-    public static String getApptDescription() {
-        return apptDescription;
-    }
-
-    public static String getApptLocation() {
-        return apptLocation;
-    }
-
-    public static String getApptContact() {
-        return apptContact;
-    }
-
-    public static String getApptType() {
-        return apptType;
-    }
-
-    public static LocalDateTime getApptStart() {
-        return apptStart;
-    }
-
-    public static LocalDateTime getApptEnd() {
-        return apptEnd;
-    }
-
-    public static int getApptCustomerID() {
-        return apptCustomerID;
-    }
-
-    public static int getApptUserID() {
-        return apptUserID;
-    }
-
-    public void setApptID(int apptID) {
-        this.apptID = apptID;
+    public void setApptID(int id) {
+        this.apptID.set(id);
     }
 
     public void setApptTitle(String apptTitle) {
@@ -112,19 +57,69 @@ public class Appointment {
         this.apptType = apptType;
     }
 
-    public void setApptStart(LocalDateTime apptStart) {
+    public void setApptStart(Timestamp apptStart) {
         this.apptStart = apptStart;
     }
 
-    public void setApptEnd(LocalDateTime apptEnd) {
+    public void setApptEnd(Timestamp apptEnd) {
         this.apptEnd = apptEnd;
     }
 
-    public void setApptCustomerID(int apptCustomerID) {
-        this.apptCustomerID = apptCustomerID;
+    public void setApptCustomerID(int id) {
+        this.apptCustomerID.set(id);
     }
 
-    public void setApptUserID(int apptUserID) {
-        this.apptUserID = apptUserID;
+    public void setApptUserID(int id) {
+        this.apptUserID.set(id);
     }
+
+    public void getApptStartTime(LocalDate date, int startHour, int startMin) {
+        Date.valueOf(date);
+    LocalTime.of(startHour, startMin);
+    }
+
+    public void getApptEndTime(LocalDate date, int endHour, int endMin) {
+
+    }
+
+    public int getApptID() {
+        return apptID.get();
+    }
+
+    public String getApptTitle() {
+        return apptTitle;
+    }
+
+    public String getApptDescription() {
+        return apptDescription;
+    }
+
+    public String getApptLocation() {
+        return apptLocation;
+    }
+
+    public String getApptContact() {
+        return apptContact;
+    }
+
+    public String getApptType() {
+        return apptType;
+    }
+
+    public Timestamp getApptStart() {
+        return apptStart;
+    }
+
+    public Timestamp getApptEnd() {
+        return apptEnd;
+    }
+
+    public int getApptCustomerID() {
+        return apptCustomerID.get();
+    }
+
+    public int getApptUserID() {
+        return apptUserID.get();
+    }
+
 }

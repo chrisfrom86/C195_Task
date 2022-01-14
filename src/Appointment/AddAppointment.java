@@ -1,45 +1,68 @@
 package Appointment;
 
+import Location.Location;
+import Main.DB;
+import Main.Login;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
+import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
 
-import java.sql.Date;
-import java.time.DateTimeException;
+import java.io.IOException;
+import java.net.URL;
+import java.sql.PreparedStatement;
+import java.sql.Timestamp;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.ResourceBundle;
 
-public class AddAppointment {
+import static Location.LocDAO.*;
+
+public class AddAppointment implements Initializable {
     public TextField apptIDTextField;
     public TextField apptTitleTextField;
     public TextField apptDescriptionTextField;
     public TextField apptTypeTextField;
     public TextField apptCustomerIDTextField;
     public TextField apptUserIDTextField;
-    public DatePicker apptStartDatePicker;
+    public DatePicker apptDatePicker;
     public ComboBox apptIDCustomerTextField;
-    public ComboBox apptStartHourComboBox;
-    public ComboBox apptStartMinComboBox;
-    public ComboBox apptEndHourComboBox;
-    public ComboBox apptEndMinComboBox;
+    public ComboBox apptStartComboBox;
+    public ComboBox apptEndComboBox;
     public Button apptSaveButton;
     public Button apptCancelButton;
     public Label errorLabel;
     public TextField apptLocationTextField;
+    public ComboBox apptCountryComboBox;
+    public ComboBox apptCountryDivisionComboBox;
 
-    public void start() {
+    @Override
+    public void initialize(URL url, ResourceBundle resourceBundle) {
         ObservableList<String> customerList = FXCollections.observableArrayList("Customer 1");
         apptIDCustomerTextField.setItems(customerList);
-        apptStartHourComboBox.getItems().addAll("08", "09", "10", "11", "12", "13");
-        apptStartMinComboBox.getItems().addAll("00", "15", "30", "45");
-        apptEndHourComboBox.getItems().addAll("08", "09", "10", "11", "12");
-        apptEndMinComboBox.getItems().addAll("00", "15", "30", "45");
+
+        try {
+            apptCountryComboBox.setItems(getAllCountries());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        apptCountryDivisionComboBox.setVisibleRowCount(10);
+
+        LocalTime start = LocalTime.of(8, 0);
+        LocalTime end = LocalTime.of(22, 0);
+        while (start.isBefore(end.plusMinutes(-14))) {
+            apptStartComboBox.getItems().add(start);
+            start = start.plusMinutes(15);
+            apptEndComboBox.getItems().add(start);
+        }
     }
 
+    /*
     public void onApptSaveButton(ActionEvent event) {
 
+         // let mysql handle new IDs... just get from java side when needed
         int x = 0;
 
         for (Appointment appt : AppointmentView.allAppointments)
@@ -48,6 +71,8 @@ public class AddAppointment {
                 x = Appointment.getApptID();
         x += 1;
         int id = x;
+
+
 
         errorLabel.setText("");
         boolean createAppt = true;
@@ -176,6 +201,7 @@ public class AddAppointment {
             createAppt = false;
         }
 
+
         if (createAppt) {
             System.out.println("New Appointment saved");
             Appointment appointment = new Appointment(id, title, description, location, contact, type, apptStart, apptEnd, customerID, userID);
@@ -188,9 +214,68 @@ public class AddAppointment {
 
     }
 
-    public void onApptCancelButton(ActionEvent event) {
+         */
+
+    public void onApptSaveButton() throws Exception {
+        DB.getConnection();
+        String sql = "INSERT INTO appointments(title, description, location, type, start, end, create_date, created_by, last_update, last_updated_by, customer_id, user_id, contact_id)" +
+                " VALUES(?,?,?,?,?,?,NOW(),?,NOW(),?,?,?,?);";
+        PreparedStatement pst = DB.getConnection().prepareStatement(sql);
+        pst.setString(1, apptTitleTextField.getText());
+            System.out.println(apptTitleTextField.getText());
+        pst.setString(2, apptDescriptionTextField.getText());
+            System.out.println(apptDescriptionTextField.getText());
+
+        Location loc = (Location) apptCountryDivisionComboBox.getSelectionModel().getSelectedItem();
+        pst.setString(3, loc.getDivision());
+            System.out.println(loc.getDivision());
+        pst.setString(4, apptTypeTextField.getText());
+            System.out.println(apptTypeTextField.getText());
+
+        LocalDate apptDate = apptDatePicker.getValue();
+        LocalTime startTime = (LocalTime) apptStartComboBox.getValue();
+        Timestamp startTimestamp = Timestamp.valueOf(apptDate.atTime(startTime));
+            System.out.println(startTimestamp);
+        pst.setTimestamp(5, (startTimestamp));
+
+        LocalTime endTime = (LocalTime) apptEndComboBox.getValue();
+        Timestamp endTimestamp = Timestamp.valueOf(apptDate.atTime(endTime));
+            System.out.println(endTimestamp);
+        pst.setTimestamp(6, (endTimestamp));
+
+        pst.setString(7, "java");
+            System.out.println("java");
+        pst.setString(8, "java");
+            System.out.println("java");
+        pst.setInt(9, 1);
+            System.out.println("1");
+        pst.setInt(10, 2);
+            System.out.println("2");
+        pst.setInt(11, 3);
+            System.out.println("3");
+        System.out.println(pst);
+        pst.executeUpdate();
+        errorLabel.setText("New appointment added");
+        Login.showApptView();
+        Stage stage = (Stage) apptSaveButton.getScene().getWindow();
+        stage.close();
+    }
+
+    public void onApptCancelButton(ActionEvent event) throws IOException {
         System.out.println("Add Appt Cancel button clicked");
+        Login.showApptView();
         Stage stage = (Stage) apptCancelButton.getScene().getWindow();
         stage.close();
+    }
+
+
+    public void onApptCountryComboBox(ActionEvent event) throws Exception {
+        Location loc = (Location) apptCountryComboBox.getSelectionModel().getSelectedItem();
+        System.out.println(loc);
+        try {
+           apptCountryDivisionComboBox.getItems().setAll(getCountryDivisions(loc.getCountryID()));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
