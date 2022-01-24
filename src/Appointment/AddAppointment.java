@@ -1,10 +1,10 @@
 package Appointment;
 
-import Location.Location;
-import Main.DB;
-import Main.Login;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
+import Contact.Contact;
+import Customer.Customer;
+import Location.Country;
+import Location.CountryDivision;
+import Login.Login;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
@@ -12,36 +12,48 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.net.URL;
-import java.sql.PreparedStatement;
 import java.sql.Timestamp;
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.*;
 import java.util.ResourceBundle;
+import java.util.TimeZone;
 
+import static Appointment.ApptDAO.*;
+import static Contact.ContactDAO.getAllContacts;
+import static Customer.CustomerDAO.getAllCustomers;
 import static Location.LocDAO.*;
+import static Login.Login.loggedInUserID;
 
 public class AddAppointment implements Initializable {
     public TextField apptIDTextField;
     public TextField apptTitleTextField;
     public TextField apptDescriptionTextField;
-    public TextField apptTypeTextField;
-    public TextField apptCustomerIDTextField;
+    public ComboBox apptTypeComboBox;
     public TextField apptUserIDTextField;
     public DatePicker apptDatePicker;
-    public ComboBox apptIDCustomerTextField;
+    public ComboBox apptCustomerComboBox;
     public ComboBox apptStartComboBox;
     public ComboBox apptEndComboBox;
     public Button apptSaveButton;
     public Button apptCancelButton;
     public Label errorLabel;
-    public TextField apptLocationTextField;
     public ComboBox apptCountryComboBox;
     public ComboBox apptCountryDivisionComboBox;
+    public ComboBox apptContactComboBox;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        ObservableList<String> customerList = FXCollections.observableArrayList("Customer 1");
-        apptIDCustomerTextField.setItems(customerList);
+        System.out.println("AddAppointment - initialized");
+
+        try {
+            apptContactComboBox.setItems(getAllContacts());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        try {
+            apptCustomerComboBox.setItems(getAllCustomers());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         try {
             apptCountryComboBox.setItems(getAllCountries());
@@ -50,232 +62,176 @@ public class AddAppointment implements Initializable {
         }
         apptCountryDivisionComboBox.setVisibleRowCount(10);
 
-        LocalTime start = LocalTime.of(8, 0);
-        LocalTime end = LocalTime.of(22, 0);
-        while (start.isBefore(end.plusMinutes(-14))) {
-            apptStartComboBox.getItems().add(start);
-            start = start.plusMinutes(15);
-            apptEndComboBox.getItems().add(start);
+        populateTimeComboBoxes();
+        populateTypeComboBox();
+
+        apptUserIDTextField.setText(String.valueOf(loggedInUserID));
+    }
+
+    public void populateTypeComboBox() {
+        apptTypeComboBox.getItems().addAll("Work", "Personal");
+    }
+
+    public void populateTimeComboBoxes() {
+        ZoneId eastern = ZoneId.of("America/New_York");  //eastern
+        ZonedDateTime startZDT = ZonedDateTime.of(LocalDate.now(), LocalTime.of(8,0), eastern);
+        ZonedDateTime endZDT = ZonedDateTime.of(LocalDate.now(), LocalTime.of(22,0), eastern);
+        ZoneId localZoneId = TimeZone.getDefault().toZoneId(); //local
+        ZonedDateTime localStartZDT = startZDT.withZoneSameInstant(localZoneId);
+        ZonedDateTime localEndZDT = endZDT.withZoneSameInstant(localZoneId);
+
+        while (localStartZDT.isBefore(localEndZDT.plusMinutes(-14))) {
+            apptStartComboBox.getItems().add(localStartZDT.toLocalTime());
+            localStartZDT = localStartZDT.plusMinutes(15);
+            apptEndComboBox.getItems().add(localStartZDT.toLocalTime());
         }
     }
 
-    /*
-    public void onApptSaveButton(ActionEvent event) {
-
-         // let mysql handle new IDs... just get from java side when needed
-        int x = 0;
-
-        for (Appointment appt : AppointmentView.allAppointments)
-            if (appt == null) {}
-            else if (Appointment.getApptID() > x)
-                x = Appointment.getApptID();
-        x += 1;
-        int id = x;
-
-
-
+    public void onApptSaveButton() throws Exception {
+        System.out.println("AddAppointment - appt save button clicked");
         errorLabel.setText("");
-        boolean createAppt = true;
+        boolean addConfirm = true;
 
         String title = apptTitleTextField.getText();
         if (title == null || apptTitleTextField.getText().trim().isEmpty()) {
-            errorLabel.setText(errorLabel.getText() + "Enter a title.\n");
-            createAppt = false;
+            errorLabel.setText(errorLabel.getText() + "Enter a title. ");
+            addConfirm = false;
         }
 
         String description = apptDescriptionTextField.getText();
         if (description == null || apptDescriptionTextField.getText().trim().isEmpty()) {
-            errorLabel.setText(errorLabel.getText() + "Enter a description.\n");
-            createAppt = false;
+            errorLabel.setText(errorLabel.getText() + "Enter a description. ");
+            addConfirm = false;
         }
 
-        String location = apptLocationTextField.getText();
-        if (location == null || apptLocationTextField.getText().trim().isEmpty()) {
-            errorLabel.setText(errorLabel.getText() + "Enter a location.\n");
-            createAppt = false;
+        Contact contact = (Contact) apptContactComboBox.getSelectionModel().getSelectedItem();
+        int contactID = 0;
+        if (apptContactComboBox.getSelectionModel().isEmpty()) {
+            errorLabel.setText(errorLabel.getText() + "Select a contact. ");
+            addConfirm = false;
+        } else {
+            contactID = contact.contactID;
         }
 
-        //add Customer validation here
-        String contact = "Customer";
-
-        String type = apptTypeTextField.getText();
-        if (type == null || apptTypeTextField.getText().trim().isEmpty()) {
-            errorLabel.setText(errorLabel.getText() + "Enter a type.\n");
-            createAppt = false;
+        String type = (String) apptTypeComboBox.getSelectionModel().getSelectedItem();
+        if (type == null || apptTypeComboBox.getSelectionModel().getSelectedItem() == null) {
+            errorLabel.setText(errorLabel.getText() + "Enter a type. ");
+            addConfirm = false;
         }
 
-        LocalDateTime apptStart = LocalDateTime.of(2020, 01, 30, 8,00);
-        LocalDateTime apptEnd = LocalDateTime.of(2020, 01, 30, 12,00);
-
-        //Need to make sure date is not in the past
-        LocalDate date = null;
-        try {
-            date = apptStartDatePicker.getValue();
-        } catch (DateTimeException e) {
-            errorLabel.setText(errorLabel.getText() + "DateTime Exception.\n");
-            createAppt = false;
-        } catch (Exception e) {
-            System.out.println("LocalDate exception: " + e);
-            errorLabel.setText(errorLabel.getText() + "DateTime Exception.\n");
-            createAppt = false;
+        CountryDivision div = (CountryDivision) apptCountryDivisionComboBox.getSelectionModel().getSelectedItem();
+        String location = null;
+        if (apptCountryDivisionComboBox.getSelectionModel().isEmpty()) {
+            errorLabel.setText(errorLabel.getText() + "Select a location. ");
+            addConfirm = false;
+        } else {
+            location  = div.getDivision();
         }
 
-        int startHour = 12; //initialize start hour
-        try {
-            int apptStartHour = startHour; // ensure start hour is between 08-21
-        } catch (NumberFormatException e) {
-            errorLabel.setText(errorLabel.getText() + "Min must be a number.\n");
-            createAppt = false;
-        } catch (Exception e) {
-            System.out.println("min exception: " + e);
-            errorLabel.setText(errorLabel.getText() + "Min must be a number.\n");
-            createAppt = false;
+        LocalDate apptDate = apptDatePicker.getValue();
+        if (apptDate == null) {
+            errorLabel.setText(errorLabel.getText() + "Select a date. ");
+            addConfirm = false;
         }
 
-        int startMin = 00; //initialize start minute
-        try {
-            int apptStartMin = startMin; // ensure start minute is 00, 15, 30, or 45
-        } catch (NumberFormatException e) {
-            errorLabel.setText(errorLabel.getText() + "Min must be a number.\n");
-            createAppt = false;
-        } catch (Exception e) {
-            System.out.println("min exception: " + e);
-            errorLabel.setText(errorLabel.getText() + "Min must be a number.\n");
-            createAppt = false;
-        }
-
-        int endHour = 12; //initialize end hour
-        try {
-            endHour = Integer.parseInt((String) apptEndHourComboBox.getSelectionModel().getSelectedItem()); // ensure start hour is between 08-21
-        } catch (NumberFormatException e) {
-            errorLabel.setText(errorLabel.getText() + "Appt end Hour must be a number.\n");
-            createAppt = false;
-        } catch (Exception e) {
-            System.out.println("min exception: " + e);
-            errorLabel.setText(errorLabel.getText() + "Appt end Hour must be a number.\n");
-            createAppt = false;
-        }
-
-        int endMin = 00; //initialize end minute
-        try {
-            endMin = Integer.parseInt((String) apptEndMinComboBox.getSelectionModel().getSelectedItem()); // ensure start minute is 00, 15, 30, or 45
-        } catch (NumberFormatException e) {
-            errorLabel.setText(errorLabel.getText() + "Appt end Min must be a number.\n");
-            createAppt = false;
-        } catch (Exception e) {
-            System.out.println("min exception: " + e);
-            errorLabel.setText(errorLabel.getText() + "Appt end Min must be a number.\n");
-            createAppt = false;
-        }
-
-        if (startHour > endHour || startHour == -1 || endHour == -2) {
-            errorLabel.setText(errorLabel.getText() + "Start hour must be earlier than end.\n");
-            createAppt = false;
-        }
-        else if (startHour == endHour) {
-            if (startMin >= endMin) {
-                errorLabel.setText(errorLabel.getText() + "Start minutes must be earlier than end.");
+        LocalTime startTime = (LocalTime) apptStartComboBox.getValue();
+        ZonedDateTime startTimeZDT = null;
+        ZoneId localZoneId = TimeZone.getDefault().toZoneId(); //local
+        if (apptStartComboBox.getSelectionModel().isEmpty()) {
+            errorLabel.setText(errorLabel.getText() + "Select a start time. ");
+            addConfirm = false;
+        } else {
+            try {
+                startTimeZDT = ZonedDateTime.of(apptDate, startTime, localZoneId);
+            } catch (Exception e) {
             }
         }
-        int customerID = -1;
-        try {
-            customerID = Integer.parseInt(apptCustomerIDTextField.getText());
-        } catch (NumberFormatException e) {
-            errorLabel.setText(errorLabel.getText() + "Customer ID must be a number.\n");
-            createAppt = false;
-        } catch (Exception e) {
-            System.out.println("custID exception: " + e);
-            errorLabel.setText(errorLabel.getText() + "Customer ID must be a number.\n");
-            createAppt = false;
+
+        LocalTime endTime = (LocalTime) apptEndComboBox.getValue();
+        ZonedDateTime endTimeZDT = null;
+        if (apptEndComboBox.getSelectionModel().isEmpty()) {
+            errorLabel.setText(errorLabel.getText() + "Select an end time. ");
+            addConfirm = false;
+        } else {
+            try {
+                endTimeZDT = ZonedDateTime.of(apptDate, endTime, localZoneId);
+            } catch (Exception e) {
+            }
         }
 
-        int userID = -1;
-        try {
-            userID = Integer.parseInt(apptUserIDTextField.getText());
-        } catch (NumberFormatException e) {
-            errorLabel.setText(errorLabel.getText() + "User ID must be a number.\n");
-            createAppt = false;
-        } catch (Exception e) {
-            System.out.println("UserID exception: " + e);
-            errorLabel.setText(errorLabel.getText() + "User ID must be a number.\n");
-            createAppt = false;
+        Customer cust = (Customer) apptCustomerComboBox.getSelectionModel().getSelectedItem();
+        int customerID = 0;
+        if (apptCustomerComboBox.getSelectionModel().isEmpty()) {
+            errorLabel.setText(errorLabel.getText() + "Select a customer. ");
+            addConfirm = false;
+        } else {
+            customerID = cust.getCustomerID();
         }
 
+        if (addConfirm) {
+            if (!checkApptOverlapByCustomer(customerID, startTimeZDT, endTimeZDT)) {
+                errorLabel.setText(errorLabel.getText() + "Selected time overlaps another appointment. ");
+            }
+        }
 
-        if (createAppt) {
-            System.out.println("New Appointment saved");
-            Appointment appointment = new Appointment(id, title, description, location, contact, type, apptStart, apptEnd, customerID, userID);
-            AppointmentView.allAppointments.add(appointment);
+        if (addConfirm && checkApptOverlapByCustomer(customerID, startTimeZDT, endTimeZDT)) {
+            addAppointment(title, description, contactID, location, type, startTimeZDT, endTimeZDT, customerID, loggedInUserID);
+            errorLabel.setText("New appointment added");
+            Login.showApptView();
             Stage stage = (Stage) apptSaveButton.getScene().getWindow();
             stage.close();
         }
-        //Appointment newAppt = new Appointment();
-
-
-    }
-
-         */
-
-    public void onApptSaveButton() throws Exception {
-        DB.getConnection();
-        String sql = "INSERT INTO appointments(title, description, location, type, start, end, create_date, created_by, last_update, last_updated_by, customer_id, user_id, contact_id)" +
-                " VALUES(?,?,?,?,?,?,NOW(),?,NOW(),?,?,?,?);";
-        PreparedStatement pst = DB.getConnection().prepareStatement(sql);
-        pst.setString(1, apptTitleTextField.getText());
-            System.out.println(apptTitleTextField.getText());
-        pst.setString(2, apptDescriptionTextField.getText());
-            System.out.println(apptDescriptionTextField.getText());
-
-        Location loc = (Location) apptCountryDivisionComboBox.getSelectionModel().getSelectedItem();
-        pst.setString(3, loc.getDivision());
-            System.out.println(loc.getDivision());
-        pst.setString(4, apptTypeTextField.getText());
-            System.out.println(apptTypeTextField.getText());
-
-        LocalDate apptDate = apptDatePicker.getValue();
-        LocalTime startTime = (LocalTime) apptStartComboBox.getValue();
-        Timestamp startTimestamp = Timestamp.valueOf(apptDate.atTime(startTime));
-            System.out.println(startTimestamp);
-        pst.setTimestamp(5, (startTimestamp));
-
-        LocalTime endTime = (LocalTime) apptEndComboBox.getValue();
-        Timestamp endTimestamp = Timestamp.valueOf(apptDate.atTime(endTime));
-            System.out.println(endTimestamp);
-        pst.setTimestamp(6, (endTimestamp));
-
-        pst.setString(7, "java");
-            System.out.println("java");
-        pst.setString(8, "java");
-            System.out.println("java");
-        pst.setInt(9, 1);
-            System.out.println("1");
-        pst.setInt(10, 2);
-            System.out.println("2");
-        pst.setInt(11, 3);
-            System.out.println("3");
-        System.out.println(pst);
-        pst.executeUpdate();
-        errorLabel.setText("New appointment added");
-        Login.showApptView();
-        Stage stage = (Stage) apptSaveButton.getScene().getWindow();
-        stage.close();
     }
 
     public void onApptCancelButton(ActionEvent event) throws IOException {
-        System.out.println("Add Appt Cancel button clicked");
+        System.out.println("AddAppointment - Add Appt Cancel button clicked");
         Login.showApptView();
         Stage stage = (Stage) apptCancelButton.getScene().getWindow();
         stage.close();
     }
 
-
-    public void onApptCountryComboBox(ActionEvent event) throws Exception {
-        Location loc = (Location) apptCountryComboBox.getSelectionModel().getSelectedItem();
+    public void onApptCountryComboBox() throws Exception {
+        Country loc = (Country) apptCountryComboBox.getSelectionModel().getSelectedItem();
         System.out.println(loc);
         try {
-           apptCountryDivisionComboBox.getItems().setAll(getCountryDivisions(loc.getCountryID()));
+           apptCountryDivisionComboBox.getItems().setAll(getAllDivisionsByCountryID(loc.getCountryID()));
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    public void onApptStartTimeComboBox(ActionEvent event) {
+        //populateTimeComboBoxes();
+
+        ZoneId eastern = ZoneId.of("America/New_York");  //eastern
+        ZoneId localZoneId = TimeZone.getDefault().toZoneId(); //local
+
+        ZonedDateTime startZDT = ZonedDateTime.of(LocalDate.now(), LocalTime.of(8,0), eastern);
+        LocalTime startLT = (LocalTime) apptStartComboBox.getSelectionModel().getSelectedItem();
+        ZonedDateTime localZDT = startZDT.withZoneSameInstant(localZoneId);
+        ZonedDateTime localStartZDT = ZonedDateTime.of(localZDT.toLocalDate(), startLT, localZoneId);
+        ZonedDateTime endZDT = ZonedDateTime.of(LocalDate.now(), LocalTime.of(22,0), eastern);
+        ZonedDateTime localEndZDT = endZDT.withZoneSameInstant(localZoneId);
+        apptEndComboBox.getItems().clear();
+
+        if ((startLT.isAfter(LocalTime.of(0,0)) && (startLT.isBefore(LocalTime.of(14,0)))) || startLT.equals(LocalTime.of(0,0))) {
+            localStartZDT = localStartZDT.plusDays(1);
+            while (localStartZDT.toLocalTime().isBefore(localEndZDT.toLocalTime().plusMinutes(-14))) {
+                localStartZDT = localStartZDT.plusMinutes(15);
+                apptEndComboBox.getItems().add(localStartZDT.toLocalTime());
+            }
+        } else {
+                while (localStartZDT.isBefore(localEndZDT.plusMinutes(-14))) {
+                    localStartZDT = localStartZDT.plusMinutes(15);
+                    apptEndComboBox.getItems().add(localStartZDT.toLocalTime());
+            }
+
+
+
+//        for (int i=0; i < apptEndComboBox.getItems().size(); ++i) {
+//            if (apptEndComboBox.getItems().get(i) == )
+//        }
+
         }
     }
 }

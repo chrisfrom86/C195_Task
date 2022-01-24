@@ -1,6 +1,9 @@
 package Appointment;
 
-import javafx.collections.FXCollections;
+import Contact.Contact;
+import Customer.Customer;
+import Location.Country;
+import Location.CountryDivision;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXMLLoader;
@@ -13,9 +16,15 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.net.URL;
+import java.sql.SQLException;
+import java.time.Month;
 import java.util.Objects;
 import java.util.ResourceBundle;
 
+import static Appointment.ApptDAO.*;
+import static Contact.ContactDAO.getAllContacts;
+import static Customer.CustomerDAO.getAllCustomers;
+import static Customer.CustomerDAO.getCustomerByID;
 import static Location.LocDAO.*;
 
 public class AppointmentView implements Initializable {
@@ -30,7 +39,6 @@ public class AppointmentView implements Initializable {
     public Button logoutButton;
     public Button calcTotalApptsButton;
     public TableView apptTableView;
-    public static ObservableList<Appointment> allAppointments = FXCollections.observableArrayList();
     public TableColumn apptIDColumn;
     public TableColumn apptTitleColumn;
     public TableColumn apptDescriptionColumn;
@@ -43,74 +51,88 @@ public class AppointmentView implements Initializable {
     public TableColumn apptUserIDColumn;
     public Button clearSelectionsButton;
     public Button customerViewButton;
-    public Button contactViewButton;
-    public Button userViewButton;
+    public static Appointment selectedAppointment;
+    public ComboBox apptMonthReportComboBox;
+    public ComboBox apptTypeReportComboBox;
+    public ComboBox apptContactReportComboBox;
+    public ComboBox apptViewByCustomerComboBox;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        System.out.println("AppointmentView opened");
+        System.out.println("AppointmentView - AppointmentView opened");
+        apptTableView.setPlaceholder(new Label("No appointments."));
 
         apptIDColumn.setCellValueFactory(new PropertyValueFactory("apptID"));
         apptTitleColumn.setCellValueFactory(new PropertyValueFactory("apptTitle"));
         apptDescriptionColumn.setCellValueFactory(new PropertyValueFactory("apptDescription"));
         apptLocationColumn.setCellValueFactory(new PropertyValueFactory("apptLocation"));
-        apptContactColumn.setCellValueFactory(new PropertyValueFactory("apptContact"));
+        apptContactColumn.setCellValueFactory(new PropertyValueFactory("apptContactID"));
         apptTypeColumn.setCellValueFactory(new PropertyValueFactory("apptType"));
         apptStartColumn.setCellValueFactory(new PropertyValueFactory("apptStart"));
         apptEndColumn.setCellValueFactory(new PropertyValueFactory("apptEnd"));
         apptCustomerIDColumn.setCellValueFactory(new PropertyValueFactory("apptCustomerID"));
         apptUserIDColumn.setCellValueFactory(new PropertyValueFactory("apptUserID"));
-        System.out.println("Appt columns loaded");
+        System.out.println("AppointmentView - Appt columns loaded");
         try {
             ObservableList<Appointment> apptList = ApptDAO.getAllAppointments();
-            System.out.println("appointment list created from DB.getAllAppointments()");
+            System.out.println("AppointmentView - appointment list created from DB.getAllAppointments()");
             populateAppointments(apptList);
-            System.out.println("tableview populated with appointments");
+            System.out.println("AppointmentView - tableview populated with appointments");
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
 
-    /**
-     * //Appointment database columns and index//
-     * 1, Appointment_ID (null)
-     * 2, Title (string)
-     * 3, Description (string)
-     * 4, Location (string)
-     * 5, Type (string)
-     * 6, Start (localtime)
-     * 7, End (localtime)
-     * 8, Create_Date (localtime)
-     * 9, Created_By (user)
-     * 10, Last_Update (localtime)
-     * 11, Last_Updated_By (user)
-     * 12, Customer_ID (customer)
-     * 13, User_ID (user)
-     * 14, Contact_ID (customer)
-     *
-     */
+        populateCustomerComboBox();
+
+        try {
+            populateReportComboBoxes();
+        } catch (Exception e) {
+            System.out.println("AppointmentView - couldn't populate report combo boxes");
+            e.printStackTrace();
+        }
+    }
 
     public void populateAppointments(ObservableList<Appointment> apptList) {
         apptTableView.setItems(apptList);
     }
 
+    public void populateReportComboBoxes() throws Exception {
+        for (Month m : Month.values()) {
+            apptMonthReportComboBox.getItems().add(m.toString());
+        }
+
+        apptTypeReportComboBox.getItems().addAll("Work", "Personal");
+
+        apptContactReportComboBox.getItems().addAll(getAllContacts());
+    }
+
+    public void populateCustomerComboBox() {
+        try {
+            apptViewByCustomerComboBox.setItems(getAllCustomers());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public void onApptMonthViewRadioButton(ActionEvent event) throws Exception {
-        System.out.println("Month view radio button selected");
-        System.out.println(getAllCountries());
+        System.out.println("AppointmentView - Month view radio button selected");
+        populateAppointments(get1MonthUpcomingAppts());
     }
 
     public void onApptWeekViewRadioButton(ActionEvent event) throws Exception {
-        System.out.println("Week view radio button selected");
-        System.out.println(getAllDivisions());
+        System.out.println("AppointmentView - Week view radio button selected");
+        populateAppointments(get1WeekUpcomingAppts());
     }
 
     public void onApptViewAllButton(ActionEvent event) throws Exception {
-        System.out.println("View all appointments button clicked");
-        System.out.println(getCountryDivisions(1));
+        System.out.println("AppointmentView - View all appointments button clicked");
+        populateAppointments(getAllAppointments());
+        apptMonthViewRadioButton.setSelected(false);
+        apptWeekViewRadioButton.setSelected(false);
     }
 
     public void onAddApptButton(ActionEvent event) throws IOException {
-        System.out.println("Appointment add button clicked");
+        System.out.println("AppointmentView - Appointment add button clicked");
 
         Parent root = FXMLLoader.load(getClass().getResource("/Appointment/AddAppointment.fxml"));
         Stage addAppt = new Stage();
@@ -123,25 +145,44 @@ public class AppointmentView implements Initializable {
     }
 
     public void onModifyApptButton() throws IOException {
-        System.out.println("Modify appointment button clicked");
+        System.out.println("AppointmentView - Modify appointment button clicked");
+        try {
+            selectedAppointment = (Appointment) apptTableView.getSelectionModel().getSelectedItem();
+            selectedAppointment.setApptCustomer(getCustomerByID(selectedAppointment.getApptCustomerID()));
+            CountryDivision countryDivision = getDivisionByName(selectedAppointment.apptLocation);
+            Country country = getCountryByID(countryDivision.countryID);
+            selectedAppointment.setApptCountry(country);
+            selectedAppointment.setApptCountryDivision(countryDivision);
+            selectedAppointment.setApptCustomer(getCustomerByID(selectedAppointment.getApptCustomerID()));
 
-        Parent root = FXMLLoader.load(getClass().getResource("/Appointment/ModifyAppointment.fxml"));
-        Stage modAppt = new Stage();
-        modAppt.setTitle("Modify Appointment - Sequeira Scheduler - WGU C195 PA Task");
-        modAppt.setScene(new Scene(root));
-        modAppt.show();
+            Parent root = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/Appointment/ModifyAppointment.fxml")));
+            Stage modAppt = new Stage();
+            modAppt.setTitle("Modify Appointment - Sequeira Scheduler - WGU C195 PA Task");
+            modAppt.setScene(new Scene(root));
+            modAppt.show();
+            Stage stage = (Stage) modifyApptButton.getScene().getWindow();
+            stage.close();
+        } catch (Exception e) {
+            System.out.println("AppointmentView - NPE no appointment selected");
+            e.printStackTrace();
+            errorLabel.setText("Select an appointment.");
+        }
     }
 
-    public void onDeleteApptButton(ActionEvent event) {
-        System.out.println("Delete appointment button clicked");
+    public void onDeleteApptButton(ActionEvent event) throws Exception {
+        System.out.println("AppointmentView - Delete appointment button clicked");
+        Appointment appt = (Appointment) apptTableView.getSelectionModel().getSelectedItem();
+        deleteAppointment(appt.getApptID());
+        populateAppointments(getAllAppointments());
+        errorLabel.setText("ID: " + appt.getApptID() + ", Type: " + appt.apptType + "\nAppointment deleted.");
     }
 
-    public void onLogoutButton(ActionEvent event) throws IOException {
-        System.out.println("Logout button clicked");
+    public void onLogoutButton() throws IOException {
+        System.out.println("AppointmentView - Logout button clicked");
         Stage stage = (Stage) logoutButton.getScene().getWindow();
         stage.close();
         
-        Parent root = FXMLLoader.load(getClass().getResource("/Main/Login.fxml"));
+        Parent root = FXMLLoader.load(getClass().getResource("/Login/Login.fxml"));
         Stage login = new Stage();
         login.setTitle("Sequeira Scheduler - WGU C195 PA Task");
         login.setScene(new Scene(root));
@@ -149,11 +190,44 @@ public class AppointmentView implements Initializable {
 
     }
 
-    public void onCalcTotalApptsButton(ActionEvent event) {
-        System.out.println("Total appointments calculated (button clicked)");
+    public void onCalcTotalApptsButton(ActionEvent event) throws SQLException {
+        System.out.println("AppointmentView - Total appointments calculated (button clicked)");
+        System.out.println(apptMonthReportComboBox.getSelectionModel().getSelectedItem());
+        String month = (String) apptMonthReportComboBox.getSelectionModel().getSelectedItem();
+        int monthNumber = 0;
+        if (month != null) {
+            Month monthName = Month.valueOf(month);
+            monthNumber = monthName.getValue();
+        }
+        System.out.println(apptTypeReportComboBox.getSelectionModel().getSelectedItem());
+        String type = (String) apptTypeReportComboBox.getSelectionModel().getSelectedItem();
+        System.out.println(apptContactReportComboBox.getSelectionModel().getSelectedItem());
+        Contact contact = (Contact) apptContactReportComboBox.getSelectionModel().getSelectedItem();
+
+        if (monthNumber == 0 && type == null && contact == null)
+            totalApptsLabel.setText("Selection total = " + getApptReport());
+        if (monthNumber != 0 && type == null && contact == null)
+            totalApptsLabel.setText("Selection total = " + getApptReport(monthNumber));
+        if (monthNumber == 0 && type != null && contact == null)
+            totalApptsLabel.setText("Selection total = " + getApptReport(type));
+        if (monthNumber == 0 && type == null && contact != null)
+            totalApptsLabel.setText("Selection total = " + getApptReport(contact));
+        if (monthNumber != 0 && type != null && contact == null)
+            totalApptsLabel.setText("Selection total = " + getApptReport(monthNumber, type));
+        if (monthNumber == 0 && type != null && contact != null)
+            totalApptsLabel.setText("Selection total = " + getApptReport(type, contact));
+        if (monthNumber != 0 && type == null && contact != null)
+            totalApptsLabel.setText("Selection total = " + getApptReport(monthNumber, contact));
+        if (monthNumber != 0 && type != null && contact != null)
+            totalApptsLabel.setText("Selection total = " + getApptReport(monthNumber, type, contact));
     }
 
     public void onClearSelectionsButton(ActionEvent event) {
+        System.out.println("AppointmentView - Report selections cleared");
+        apptMonthReportComboBox.setValue(null);
+        apptTypeReportComboBox.setValue(null);
+        apptContactReportComboBox.setValue(null);
+        totalApptsLabel.setText("");
     }
 
     public void onCustomerViewButton(ActionEvent event) throws IOException {
@@ -167,9 +241,9 @@ public class AppointmentView implements Initializable {
         stage2.show();
     }
 
-    public void onContactViewButton(ActionEvent event) {
-    }
-
-    public void onUserViewButton(ActionEvent event) {
+    public void onViewApptByCustomerComboBox() throws SQLException {
+        System.out.println("AppointmentView - view appointments by selected customer: " + apptViewByCustomerComboBox.getSelectionModel().getSelectedItem());
+        Customer selectedCustomer = (Customer) apptViewByCustomerComboBox.getSelectionModel().getSelectedItem();
+        populateAppointments(getApptsByCustomer(selectedCustomer.getCustomerName()));
     }
 }

@@ -3,23 +3,17 @@ package Location;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 
-public class Location {
+public class Country {
     public IntegerProperty countryID;
     public String country;
-    public IntegerProperty divisionID;
-    public String division;
 
-    public Location() {
+    public Country() {
         this.countryID = new SimpleIntegerProperty();
         this.country = new String();
-        this.divisionID = new SimpleIntegerProperty();
-        this.division = new String();
     }
 
     @Override
-    public String toString(){
-        return (country + division);
-    }
+    public String toString(){ return (country); }
 
     public void setCountryID(int countryID) {
         this.countryID.set(countryID);
@@ -27,14 +21,6 @@ public class Location {
 
     public void setCountry(String country) {
         this.country = country;
-    }
-
-    public void setDivisionID(int divisionID) {
-        this.divisionID.set(divisionID);
-    }
-
-    public void setDivision(String division) {
-        this.division = division;
     }
 
     public int getCountryID() {
@@ -47,17 +33,5 @@ public class Location {
 
     public String getCountry() {
         return country;
-    }
-
-    public int getDivisionID() {
-        return divisionID.get();
-    }
-
-    public IntegerProperty divisionIDProperty() {
-        return divisionID;
-    }
-
-    public String getDivision() {
-        return division;
     }
 }

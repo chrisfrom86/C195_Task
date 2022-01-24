@@ -10,8 +10,8 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception{
-        Parent root = FXMLLoader.load(getClass().getResource("Login.fxml"));
-        primaryStage.setTitle("Sequeira Scheduler - WGU C195 PA Task");
+        Parent root = FXMLLoader.load(getClass().getResource("../Login/Login.fxml"));
+        primaryStage.setTitle("Login - Sequeira Scheduler - WGU C195 PA Task");
         primaryStage.setScene(new Scene(root));
         primaryStage.show();
     }

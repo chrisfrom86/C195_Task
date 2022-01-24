@@ -1,10 +1,8 @@
 package Customer;
 
-import Location.Location;
+import Location.*;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 
 public class Customer {
     public IntegerProperty customerID;
@@ -12,18 +10,19 @@ public class Customer {
     public String customerAddress;
     public String customerPostalCode;
     public String customerPhone;
-    public Location customerLocation;
+    public Country customerCountry;
+    public CountryDivision customerCountryDivision;
 
-    public void Customer() {
-        this.customerID = new SimpleIntegerProperty();
-        this.customerName = new String();
-        this.customerAddress = new String();
-        this.customerPostalCode = new String();
-        this.customerPhone = new String();
-        this.customerLocation = new Location();
+    public Customer() {
     }
 
+    @Override
+    public String toString(){ return (customerName); }
+
+    //setters
+
     public void setCustomerID(int customerID) {
+        this.customerID = new SimpleIntegerProperty();
         this.customerID.set(customerID);
     }
 
@@ -43,9 +42,15 @@ public class Customer {
         this.customerPhone = customerPhone;
     }
 
-    public void setCustomerLocation(Location customerLocation) {
-        this.customerLocation = customerLocation;
+    public void setCustomerCountry(Country customerCountry) {
+        this.customerCountry = customerCountry;
     }
+
+    public void setCustomerCountryDivision(CountryDivision customerCountryDivision) {
+        this.customerCountryDivision = customerCountryDivision;
+    }
+
+    //getters
 
     public int getCustomerID() {
         return customerID.get();
@@ -71,7 +76,21 @@ public class Customer {
         return customerPhone;
     }
 
-    public Location getCustomerLocation() {
-        return customerLocation;
+    public Country getCustomerCountry() {
+        return customerCountry;
+    }
+
+    public CountryDivision getCustomerCountryDivision() {
+        return customerCountryDivision;
+    }
+
+    public int getCustomerCountryID() { return customerCountry.countryID.getValue(); }
+
+    public String getCustomerCountryName() {
+        return customerCountry.getCountry();
+    }
+
+    public String getCustomerDivision() {
+        return customerCountryDivision.getDivision();
     }
 }

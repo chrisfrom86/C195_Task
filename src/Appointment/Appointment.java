@@ -1,22 +1,28 @@
 package Appointment;
 
+import Customer.Customer;
+import Location.Country;
+import Location.CountryDivision;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 
 import java.sql.Date;
-import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZonedDateTime;
 
 public class Appointment {
     public IntegerProperty apptID;
     public String apptTitle;
     public String apptDescription;
     public String apptLocation;
-    public String apptContact;
+    public Country apptCountry;
+    public CountryDivision apptCountryDivision;
+    public int apptContactID;
     public String apptType;
-    public Timestamp apptStart;
-    public Timestamp apptEnd;
+    public ZonedDateTime apptStart;
+    public ZonedDateTime apptEnd;
+    public Customer apptCustomer;
     public SimpleIntegerProperty apptCustomerID;
     public SimpleIntegerProperty apptUserID;
 
@@ -25,13 +31,15 @@ public class Appointment {
         this.apptTitle = new String();
         this.apptDescription = new String();
         this.apptLocation = new String();
-        this.apptContact = new String();
+        this.apptCountry = new Country();
+        this.apptCountryDivision = new CountryDivision();
         this.apptType = new String();
-        this.apptStart = apptStart;
-        this.apptEnd = apptEnd;
+        this.apptCustomer = new Customer();
         this.apptCustomerID = new SimpleIntegerProperty();
         this.apptUserID = new SimpleIntegerProperty();
     }
+
+    //setters
 
     public void setApptID(int id) {
         this.apptID.set(id);
@@ -49,19 +57,19 @@ public class Appointment {
         this.apptLocation = apptLocation;
     }
 
-    public void setApptContact(String apptContact) {
-        this.apptContact = apptContact;
+    public void setApptContact(int apptContactID) {
+        this.apptContactID = apptContactID;
     }
 
     public void setApptType(String apptType) {
         this.apptType = apptType;
     }
 
-    public void setApptStart(Timestamp apptStart) {
+    public void setApptStart(ZonedDateTime apptStart) {
         this.apptStart = apptStart;
     }
 
-    public void setApptEnd(Timestamp apptEnd) {
+    public void setApptEnd(ZonedDateTime apptEnd) {
         this.apptEnd = apptEnd;
     }
 
@@ -72,6 +80,20 @@ public class Appointment {
     public void setApptUserID(int id) {
         this.apptUserID.set(id);
     }
+
+    public void setApptCountry(Country apptCountry) {
+        this.apptCountry = apptCountry;
+    }
+
+    public void setApptCountryDivision(CountryDivision apptCountryDivision) {
+        this.apptCountryDivision = apptCountryDivision;
+    }
+
+    public void setApptCustomer(Customer apptCustomer) {
+        this.apptCustomer = apptCustomer;
+    }
+
+    //getters
 
     public void getApptStartTime(LocalDate date, int startHour, int startMin) {
         Date.valueOf(date);
@@ -98,19 +120,19 @@ public class Appointment {
         return apptLocation;
     }
 
-    public String getApptContact() {
-        return apptContact;
+    public int getApptContactID() {
+        return apptContactID;
     }
 
     public String getApptType() {
         return apptType;
     }
 
-    public Timestamp getApptStart() {
+    public ZonedDateTime getApptStart() {
         return apptStart;
     }
 
-    public Timestamp getApptEnd() {
+    public ZonedDateTime getApptEnd() {
         return apptEnd;
     }
 
@@ -122,4 +144,31 @@ public class Appointment {
         return apptUserID.get();
     }
 
+    public IntegerProperty apptIDProperty() {
+        return apptID;
+    }
+
+    public Country getApptCountry() {
+        return apptCountry;
+    }
+
+    public int getApptCountryID() { return apptCountry.getCountryID(); }
+
+    public CountryDivision getApptCountryDivision() {
+        return apptCountryDivision;
+    }
+
+    public int getApptCountryDivisionID() { return apptCountryDivision.getDivisionID(); }
+
+    public Customer getApptCustomer() {
+        return apptCustomer;
+    }
+
+    public SimpleIntegerProperty apptCustomerIDProperty() {
+        return apptCustomerID;
+    }
+
+    public SimpleIntegerProperty apptUserIDProperty() {
+        return apptUserID;
+    }
 }

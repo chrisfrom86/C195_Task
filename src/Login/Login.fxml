@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<AnchorPane prefHeight="400.0" prefWidth="494.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Login.Login">
+   <children>
+      <Label layoutX="116.0" layoutY="34.0" text="Sequeira Scheduler">
+         <font>
+            <Font size="31.0" />
+         </font>
+      </Label>
+      <Label layoutX="351.0" layoutY="90.0" text="v1.95" />
+      <TextField fx:id="usernameTextField" layoutX="173.0" layoutY="141.0" promptText="Enter username" />
+      <TextField fx:id="passwordTextField" layoutX="173.0" layoutY="217.0" promptText="Enter password" />
+      <Label fx:id="usernameLabel" layoutX="173.0" layoutY="125.0" text="Username" />
+      <Label fx:id="passwordLabel" layoutX="175.0" layoutY="200.0" text="Password" />
+      <Label fx:id="errorLabel" alignment="CENTER" contentDisplay="CENTER" layoutX="77.0" layoutY="320.0" prefHeight="67.0" prefWidth="340.0" text="Please enter your username and password" textAlignment="CENTER" wrapText="true" />
+      <Button fx:id="loginButton" layoutX="225.0" layoutY="270.0" mnemonicParsing="false" onAction="#onLoginButton" text="Login" />
+      <Label fx:id="userLocaleLabel" layoutX="20.0" layoutY="304.0" prefHeight="17.0" prefWidth="118.0" text="Language: English" />
+      <Label fx:id="loginTimeZoneLabel" alignment="TOP_LEFT" contentDisplay="TOP" layoutX="20.0" layoutY="320.0" prefHeight="17.0" prefWidth="462.0" text="Time Zone:" wrapText="true" />
+   </children>
+</AnchorPane>

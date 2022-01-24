@@ -20,7 +20,7 @@ public class DB {
             Class.forName(MYSQLJDBCDriver);
         }
         catch (ClassNotFoundException e) {
-            System.out.println("Where is your MySQL JDBC Driver?");
+            System.out.println("DB - Where is your MySQL JDBC Driver?");
             e.printStackTrace();
         }
 
@@ -28,7 +28,7 @@ public class DB {
             conn = DriverManager.getConnection(DB_URL, username, password);
         }
         catch (SQLException e) {
-            System.out.println("Connection failed! Check output console");
+            System.out.println("DB - Connection failed! Check output console");
             e.printStackTrace();
         }
     }
@@ -54,15 +54,15 @@ public class DB {
         Statement stmt = null;
         try {
             makeConnection();
-            System.out.println("connection to db established");
+            System.out.println("DB - connection to db established");
             stmt = conn.createStatement();
-            System.out.println("SQL statement created");
+            System.out.println("DB - SQL statement created");
             stmt.executeUpdate(sqlStmt);
-            System.out.println("stmt.executeUpdate(sqlStmt) successful. db updated");
+            System.out.println("DB - stmt.executeUpdate(sqlStmt) successful. db updated");
 
         }
         catch (SQLException e) {
-            System.out.println("Problem occurred at dbExecuteUpdate operation " +e);
+            System.out.println("DB - Problem occurred at dbExecuteUpdate operation " +e);
             throw e;
         }
         finally {
@@ -80,15 +80,15 @@ public class DB {
 
         try {
             makeConnection();
-            System.out.println("connection to db established");
+            System.out.println("DB - connection to db established");
             stmt = conn.prepareStatement(sqlQuery);
-            System.out.println("SQL statement created");
+            System.out.println("DB - SQL statement created");
             stmt.executeQuery(sqlQuery);
-            System.out.println("stmt.executeQuery(sqlQuery) successful. db updated");
+            System.out.println("DB - stmt.executeQuery(sqlQuery) successful. db updated");
             rs = stmt.executeQuery(sqlQuery);
         }
         catch (SQLException e){
-            System.out.println("Error occurred in dbExecute operation " +e);
+            System.out.println("DB - Error occurred in dbExecute operation " +e);
             throw e;
         }
         finally {
