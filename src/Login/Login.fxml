@@ -13,7 +13,7 @@
       </Label>
       <Label layoutX="351.0" layoutY="90.0" text="v1.95" />
       <TextField fx:id="usernameTextField" layoutX="173.0" layoutY="141.0" promptText="Enter username" />
-      <TextField fx:id="passwordTextField" layoutX="173.0" layoutY="217.0" promptText="Enter password" />
+      <PasswordField fx:id="passwordTextField" layoutX="173.0" layoutY="217.0" promptText="Enter password" />
       <Label fx:id="usernameLabel" layoutX="173.0" layoutY="125.0" text="Username" />
       <Label fx:id="passwordLabel" layoutX="175.0" layoutY="200.0" text="Password" />
       <Label fx:id="errorLabel" alignment="CENTER" contentDisplay="CENTER" layoutX="77.0" layoutY="320.0" prefHeight="67.0" prefWidth="340.0" text="Please enter your username and password" textAlignment="CENTER" wrapText="true" />

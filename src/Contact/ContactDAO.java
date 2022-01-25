@@ -1,6 +1,5 @@
 package Contact;
 
-import Customer.Customer;
 import Main.DB;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -9,8 +8,17 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+/**
+ * @author Chris Sequeira
+ * this data access object interacts with the contacts table in the database.
+ */
 public class ContactDAO {
 
+    /**
+     * this method queries all entries in the contacts table.
+     * @return an ObservableList of Contacts is returned to populate the TableView when this method is called.
+     * @throws SQLException
+     */
     public static ObservableList<Contact> getAllContacts() throws SQLException {
         System.out.println("contactDAO - querying all contacts from db");
         String sql = "select * from contacts";
@@ -32,6 +40,12 @@ public class ContactDAO {
         return contactList;
     }
 
+    /**
+     * this method gets all contact info by its {@param id} which is referenced in the appointments table.
+     * @param id
+     * @return a Contact object is returned so that it can be loaded into an Appointment object.
+     * @throws SQLException
+     */
     public static Contact getContactByID(int id) throws SQLException {
         System.out.println("contactDAO - getting contact by ID");
         String sql = "select * from contacts where contact_id = ?";
@@ -52,6 +66,15 @@ public class ContactDAO {
         return contact;
     }
 
+    /**
+     * this method gets a contact ID from the database based on a given {@param name}.
+     *
+     * it is used to query the database for all appointments based on a given contact_ID.
+     *
+     * This is relevant in the report generated on the AppointmentView form.
+     * @return the contact ID is returned as an Integer to pass into a database query in {@link Appointment.ApptDAO}.
+     * @throws SQLException
+     */
     public static int getContactIDByName(String name) throws SQLException {
         int id = 0;
         System.out.println("contactDAO - getting contact by name");

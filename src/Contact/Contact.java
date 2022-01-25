@@ -1,5 +1,10 @@
 package Contact;
 
+/**
+ * the Contact class defines the Contact objects for use throughout the application.
+ *
+ * Each appointment in the application has a single Contact object associated with it.
+ */
 public class Contact {
     public int contactID;
     public String contactName;
@@ -8,6 +13,10 @@ public class Contact {
     public Contact() {
     }
 
+    /**
+     * the toString() method is overridden so that the modify appointment form ComboBox displays the contactName.
+     * @return
+     */
     @Override
     public String toString() { return contactName; }
 

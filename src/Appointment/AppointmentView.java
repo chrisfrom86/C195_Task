@@ -2,10 +2,11 @@ package Appointment;
 
 import Contact.Contact;
 import Customer.Customer;
+import Customer.CustomerView;
 import Location.Country;
 import Location.CountryDivision;
+import Main.DB;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
@@ -27,6 +28,23 @@ import static Customer.CustomerDAO.getAllCustomers;
 import static Customer.CustomerDAO.getCustomerByID;
 import static Location.LocDAO.*;
 
+/**
+ * @author Chris Sequeira
+ *
+ * this method is the bread and butter, the crown jewel, the pièce de résistance of this project.
+ *
+ * This form calls on AppointmentView.fxml and has the following functions (listed from top left to bottom right, going across):
+ *      - Radio buttons to select 1 Month or 1 Week views.
+ *      - Button to View All Appointments in the TableView.
+ *      - ComboBox populated with Customers to filter appointments in the TableView.
+ *      - Report Viewer with three ComboBoxes (month, type, contact) that can be used in any order or no selection to generate a report.
+ *      - Clear Selections button for the report ComboBoxes.
+ *      - TableView that shows appointments based on the selections from the top left. Shows all appointments on initial form load.
+ *      - Add, Modify, and Delete Appointment buttons. Add/Modify buttons close the current stage and open a new one.
+ *      - Delete Appointment returns a message at the bottom of the screen based on the appointment deleted.
+ *      - Customer Viewer button closes the stage and opens a new stage {@link CustomerView}.
+ *      - Logout button returns the user to the login screen.
+ */
 public class AppointmentView implements Initializable {
     public RadioButton apptMonthViewRadioButton;
     public RadioButton apptWeekViewRadioButton;
@@ -57,6 +75,17 @@ public class AppointmentView implements Initializable {
     public ComboBox apptContactReportComboBox;
     public ComboBox apptViewByCustomerComboBox;
 
+    /**
+     * this method initializes the TableView columns, populates all appointments as rows, and populates the report and customer ComboBoxes.
+     *
+     * the logout button uses a lambda expression to execute the following onAction.
+     *      1. closes the current stage.
+     *      2. loads the Login.fxml as a Parent to pass into the scene.
+     *      3. closes the database connection.
+     *      4. creates a new stage, loads a scene with the Login.fxml passed as a parameter, and then shows the stage.
+     * @param url
+     * @param resourceBundle
+     */
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         System.out.println("AppointmentView - AppointmentView opened");
@@ -90,12 +119,45 @@ public class AppointmentView implements Initializable {
             System.out.println("AppointmentView - couldn't populate report combo boxes");
             e.printStackTrace();
         }
+
+        logoutButton.setOnAction(e-> {
+            System.out.println("AppointmentView - Logout button clicked");
+            Stage stage = (Stage) logoutButton.getScene().getWindow();
+            stage.close();
+
+            Parent root = null;
+            try {
+                root = FXMLLoader.load(getClass().getResource("/Login/Login.fxml"));
+            } catch (IOException ioException) {
+                System.out.println("AppointmentView - IOException on loading login screen from logout button click");
+            }
+            try {
+                DB.closeConnection();
+                System.out.println("AppointmentView - database connection closed on logout button click");
+            } catch (Exception exception) {
+                System.out.println("AppointmentView - Exception on DB.closeConnection of logout button");
+            }
+            Stage login = new Stage();
+            login.setTitle("Sequeira Scheduler - WGU C195 PA Task");
+            login.setScene(new Scene(root));
+            login.show();
+        });
     }
 
+    /**
+     * this method populates the appointment TableView with a given {@param ApptList}.
+     *
+     * it is called with getALlAppointments on initialize, and then passed various ObservableLists from {@link ApptDAO}.
+     * @param apptList
+     */
     public void populateAppointments(ObservableList<Appointment> apptList) {
         apptTableView.setItems(apptList);
     }
 
+    /**
+     * this method populates the report ComboBoxes. it is called in initialize.
+     * @throws Exception
+     */
     public void populateReportComboBoxes() throws Exception {
         for (Month m : Month.values()) {
             apptMonthReportComboBox.getItems().add(m.toString());
@@ -106,6 +168,9 @@ public class AppointmentView implements Initializable {
         apptContactReportComboBox.getItems().addAll(getAllContacts());
     }
 
+    /**
+     * this method populates the customer ComboBox in AppointmentView so that users can view appointments by selected customer.
+     */
     public void populateCustomerComboBox() {
         try {
             apptViewByCustomerComboBox.setItems(getAllCustomers());
@@ -114,24 +179,46 @@ public class AppointmentView implements Initializable {
         }
     }
 
-    public void onApptMonthViewRadioButton(ActionEvent event) throws Exception {
+    /**
+     * this method is the onAction for the Month view RadioButton.
+     *
+     * it calls the get1MonthUpcomingAppointments() from {@link ApptDAO} and populates the Tableview with the resulting ObservableList.
+     * @throws Exception
+     */
+    public void onApptMonthViewRadioButton() throws Exception {
         System.out.println("AppointmentView - Month view radio button selected");
         populateAppointments(get1MonthUpcomingAppts());
     }
 
-    public void onApptWeekViewRadioButton(ActionEvent event) throws Exception {
+    /**
+     * this method is the onAction for the Week view RadioButton.
+     *
+     * it calls the get1WeekUpcomingAppointments() from {@link ApptDAO} and populates the Tableview with the resulting ObservableList.
+     * @throws Exception
+     */
+    public void onApptWeekViewRadioButton() throws Exception {
         System.out.println("AppointmentView - Week view radio button selected");
         populateAppointments(get1WeekUpcomingAppts());
     }
 
-    public void onApptViewAllButton(ActionEvent event) throws Exception {
+    /**
+     * this method is the onAction for the View All Appointments button.
+     *
+     * it loads all appointments from getAllAppointments() from {@link ApptDAO}.
+     * @throws Exception
+     */
+    public void onApptViewAllButton() throws Exception {
         System.out.println("AppointmentView - View all appointments button clicked");
         populateAppointments(getAllAppointments());
         apptMonthViewRadioButton.setSelected(false);
         apptWeekViewRadioButton.setSelected(false);
     }
 
-    public void onAddApptButton(ActionEvent event) throws IOException {
+    /**
+     * this method closes the current stage and opens {@link AddAppointment}.
+     * @throws IOException
+     */
+    public void onAddApptButton() throws IOException {
         System.out.println("AppointmentView - Appointment add button clicked");
 
         Parent root = FXMLLoader.load(getClass().getResource("/Appointment/AddAppointment.fxml"));
@@ -144,6 +231,10 @@ public class AppointmentView implements Initializable {
         stage.close();
     }
 
+    /**
+     * this method closes the current stage and opens {@link ModifyAppointment}.
+     * @throws IOException
+     */
     public void onModifyApptButton() throws IOException {
         System.out.println("AppointmentView - Modify appointment button clicked");
         try {
@@ -164,12 +255,19 @@ public class AppointmentView implements Initializable {
             stage.close();
         } catch (Exception e) {
             System.out.println("AppointmentView - NPE no appointment selected");
-            e.printStackTrace();
+            //e.printStackTrace();
             errorLabel.setText("Select an appointment.");
         }
     }
 
-    public void onDeleteApptButton(ActionEvent event) throws Exception {
+    /**
+     * this method deletes the selected appointment from the TableView by passing its ID to {@link ApptDAO}.
+     *
+     * If no row is selected in the TableView, an error is output to errorLabel.
+     *
+     * @throws Exception
+     */
+    public void onDeleteApptButton() throws Exception {
         System.out.println("AppointmentView - Delete appointment button clicked");
         Appointment appt = (Appointment) apptTableView.getSelectionModel().getSelectedItem();
         deleteAppointment(appt.getApptID());
@@ -177,35 +275,47 @@ public class AppointmentView implements Initializable {
         errorLabel.setText("ID: " + appt.getApptID() + ", Type: " + appt.apptType + "\nAppointment deleted.");
     }
 
+    /**
+     * @deprecated this method was used to define the onAction for the Logout Button, but is now handled in a lambda expression in initialize.
+     * @throws IOException
+     */
     public void onLogoutButton() throws IOException {
-        System.out.println("AppointmentView - Logout button clicked");
-        Stage stage = (Stage) logoutButton.getScene().getWindow();
-        stage.close();
-        
-        Parent root = FXMLLoader.load(getClass().getResource("/Login/Login.fxml"));
-        Stage login = new Stage();
-        login.setTitle("Sequeira Scheduler - WGU C195 PA Task");
-        login.setScene(new Scene(root));
-        login.show();
+//        System.out.println("AppointmentView - Logout button clicked");
+//        Stage stage = (Stage) logoutButton.getScene().getWindow();
+//        stage.close();
+//
+//        Parent root = FXMLLoader.load(getClass().getResource("/Login/Login.fxml"));
+//        Stage login = new Stage();
+//        login.setTitle("Sequeira Scheduler - WGU C195 PA Task");
+//        login.setScene(new Scene(root));
+//        login.show();
 
     }
 
-    public void onCalcTotalApptsButton(ActionEvent event) throws SQLException {
+    /**
+     * this is the onAction for generating reports in the top right of AppointmentView.
+     *
+     * if the button is clicked with no ComboBox selections, it returns the total number of appointments in a message Label.
+     *
+     * if any combination of ComboBox selections are selected, a version of the overloaded method from {@link ApptDAO} is called.
+     * @throws SQLException
+     */
+    public void onCalcTotalApptsButton() throws SQLException {
         System.out.println("AppointmentView - Total appointments calculated (button clicked)");
-        System.out.println(apptMonthReportComboBox.getSelectionModel().getSelectedItem());
+        System.out.println("AppointmentView - month selected: " + apptMonthReportComboBox.getSelectionModel().getSelectedItem());
         String month = (String) apptMonthReportComboBox.getSelectionModel().getSelectedItem();
         int monthNumber = 0;
         if (month != null) {
             Month monthName = Month.valueOf(month);
             monthNumber = monthName.getValue();
         }
-        System.out.println(apptTypeReportComboBox.getSelectionModel().getSelectedItem());
+        System.out.println("AppointmentView - type selected: " + apptTypeReportComboBox.getSelectionModel().getSelectedItem());
         String type = (String) apptTypeReportComboBox.getSelectionModel().getSelectedItem();
-        System.out.println(apptContactReportComboBox.getSelectionModel().getSelectedItem());
+        System.out.println("AppointmentView - contact selected: " + apptContactReportComboBox.getSelectionModel().getSelectedItem());
         Contact contact = (Contact) apptContactReportComboBox.getSelectionModel().getSelectedItem();
 
         if (monthNumber == 0 && type == null && contact == null)
-            totalApptsLabel.setText("Selection total = " + getApptReport());
+            totalApptsLabel.setText("Total appointments = " + getApptReport());
         if (monthNumber != 0 && type == null && contact == null)
             totalApptsLabel.setText("Selection total = " + getApptReport(monthNumber));
         if (monthNumber == 0 && type != null && contact == null)
@@ -222,7 +332,10 @@ public class AppointmentView implements Initializable {
             totalApptsLabel.setText("Selection total = " + getApptReport(monthNumber, type, contact));
     }
 
-    public void onClearSelectionsButton(ActionEvent event) {
+    /**
+     * this method clears the report ComboBoxes in case the user wants to select a different combination of ComboBox options.
+     */
+    public void onClearSelectionsButton() {
         System.out.println("AppointmentView - Report selections cleared");
         apptMonthReportComboBox.setValue(null);
         apptTypeReportComboBox.setValue(null);
@@ -230,7 +343,11 @@ public class AppointmentView implements Initializable {
         totalApptsLabel.setText("");
     }
 
-    public void onCustomerViewButton(ActionEvent event) throws IOException {
+    /**
+     * this method closes the current stage and opens {@link CustomerView}.
+     * @throws IOException
+     */
+    public void onCustomerViewButton() throws IOException {
         Stage stage = (Stage) customerViewButton.getScene().getWindow();
         stage.close();
 
@@ -241,6 +358,11 @@ public class AppointmentView implements Initializable {
         stage2.show();
     }
 
+    /**
+     * this method is the onAction for the customer ComboBox. it gets all customers based on a given name and populates them into the TableView.
+     *
+     * @throws SQLException
+     */
     public void onViewApptByCustomerComboBox() throws SQLException {
         System.out.println("AppointmentView - view appointments by selected customer: " + apptViewByCustomerComboBox.getSelectionModel().getSelectedItem());
         Customer selectedCustomer = (Customer) apptViewByCustomerComboBox.getSelectionModel().getSelectedItem();

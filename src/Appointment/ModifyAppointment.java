@@ -28,6 +28,13 @@ import static Customer.CustomerDAO.getAllCustomers;
 import static Location.LocDAO.*;
 import static Login.Login.loggedInUserID;
 
+/**
+ * @author Chris Sequeira
+ *
+ * this class controls the ModifyAppointment.fxml form.
+ *
+ * It allows users to update appointments based on validated inputs that will be passed to {@link ApptDAO}.
+ */
 public class ModifyAppointment implements Initializable {
     public TextField apptIDTextField;
     public TextField apptTitleTextField;
@@ -45,6 +52,19 @@ public class ModifyAppointment implements Initializable {
     public DatePicker apptDatePicker;
     public ComboBox apptContactComboBox;
 
+    /**
+     * this method populates the Customer, Country, and Contact ComboBoxes with all relevant items as an ObservableList.
+     *
+     * the country division (first level division) ComboBox is limited to show 10 items at a time.
+     *
+     * The appointment type ComboBox is populated with the options Work and Personal.
+     *
+     * The selected appointment is passed from {@link AppointmentView} as an {@link Appointment} object.
+     *
+     * All text fields and ComboBoxes are prepopulated with the passed Appointment information.
+     * @param url
+     * @param resourceBundle
+     */
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         System.out.println("ModifyAppointment - initialized");
@@ -56,7 +76,6 @@ public class ModifyAppointment implements Initializable {
         try { apptContactComboBox.setItems(getAllContacts());
         } catch (Exception e) { e.printStackTrace(); }
         apptCountryDivisionComboBox.setVisibleRowCount(10);
-        populateTimeComboBoxes();
         populateTypeComboBox();
 
         Appointment sAppt = selectedAppointment;
@@ -78,6 +97,7 @@ public class ModifyAppointment implements Initializable {
         apptCountryDivisionComboBox.setPromptText("Select location");
         apptCountryDivisionComboBox.getSelectionModel().select(sAppt.getApptCountryDivision());
         apptDatePicker.valueProperty().setValue(sAppt.apptStart.toLocalDateTime().toLocalDate());
+
         LocalTime start = sAppt.apptStart.toLocalDateTime().toLocalTime();
         apptStartComboBox.getSelectionModel().select(start);
         LocalTime end = LocalTime.of(22, 0);
@@ -87,6 +107,8 @@ public class ModifyAppointment implements Initializable {
             apptEndComboBox.getItems().add(start);
         }
         apptEndComboBox.getSelectionModel().select(sAppt.apptEnd.toLocalDateTime().toLocalTime());
+        populateTimeComboBoxes();
+
         apptCustomerComboBox.setValue(sAppt.apptCustomer);
         apptUserIDTextField.setText(String.valueOf(sAppt.getApptUserID())); //user_id
 
@@ -106,10 +128,16 @@ public class ModifyAppointment implements Initializable {
         System.out.println("ModifyAppointment - apptUserID      = " + sAppt.apptUserID.get());
     }
 
+    /**
+     * this method populates the appointment type ComboBox with two predetermined options.
+     */
     public void populateTypeComboBox() {
         apptTypeComboBox.getItems().addAll("Work", "Personal");
     }
 
+    /**
+     * this method populates the time ComboBoxes with the company hours from 0800-2200 EST, converted to system local hours.
+     */
     public void populateTimeComboBoxes() {
         ZoneId eastern = ZoneId.of("America/New_York");  //eastern
         ZonedDateTime startZDT = ZonedDateTime.of(LocalDate.now(), LocalTime.of(8,0), eastern);
@@ -125,6 +153,11 @@ public class ModifyAppointment implements Initializable {
         }
     }
 
+    /**
+     * this method validates all information provided for the appointment to modify, then passes the information to {@link ApptDAO}.
+     * @throws IOException
+     * @throws SQLException
+     */
     public void onApptSaveButton() throws IOException, SQLException {
         int apptID = Integer.parseInt(apptIDTextField.getText());
 
@@ -190,7 +223,7 @@ public class ModifyAppointment implements Initializable {
 
         Customer cust = (Customer) apptCustomerComboBox.getSelectionModel().getSelectedItem();
         int customerID = 0;
-        if (apptCustomerComboBox.getSelectionModel().isEmpty()) {
+        if (!apptCustomerComboBox.getSelectionModel().isEmpty()) {
             errorLabel.setText(errorLabel.getText() + "Select a customer. ");
             addConfirm = false;
         } else {
@@ -198,12 +231,13 @@ public class ModifyAppointment implements Initializable {
         }
 
         if (addConfirm) {
-            if (!checkApptOverlapByCustomer(customerID, startTimeZDT, endTimeZDT)) {
+            if (!checkApptOverlapByCustomer(apptID, startTimeZDT, endTimeZDT)) {
                 errorLabel.setText(errorLabel.getText() + "Selected time overlaps another appointment. ");
             }
         }
 
-        if (addConfirm && checkApptOverlapByCustomer(customerID, startTimeZDT, endTimeZDT)) {
+
+        if (addConfirm && checkApptOverlapByCustomer(apptID, startTimeZDT, endTimeZDT)) {
             updateAppointment(apptID, title, description, contactID, location, type, startTimeZDT, endTimeZDT, customerID, loggedInUserID);
             errorLabel.setText("Appointment ID " + apptID + " updated");
             Login.showApptView();
@@ -212,28 +246,64 @@ public class ModifyAppointment implements Initializable {
         }
     }
 
-    public void onApptCancelButton(ActionEvent event) throws IOException {
+    /**
+     * this method closes the current stage and opens a new stage for {@link AppointmentView}.
+     * @throws IOException
+     */
+    public void onApptCancelButton() throws IOException {
         System.out.println("ModifyAppointment - Modify Appt Cancel button clicked");
         Stage stage = (Stage) apptCancelButton.getScene().getWindow();
         stage.close();
         Login.showApptView();
     }
 
-    public void onApptStartTimeComboBox(ActionEvent event) {
-        populateTimeComboBoxes();
+    /**
+     * this onAction method dynamically updates the end time ComboBox based on the selection of the start time ComboBox.
+     */
+    public void onApptStartTimeComboBox() {
 
-        LocalTime start = (LocalTime) apptStartComboBox.getSelectionModel().getSelectedItem();
+        ZoneId eastern = ZoneId.of("America/New_York");  //eastern
+        ZoneId localZoneId = TimeZone.getDefault().toZoneId(); //local
 
-        LocalTime end = LocalTime.of(22, 0);
-
+        ZonedDateTime startZDT = ZonedDateTime.of(LocalDate.now(), LocalTime.of(8,0), eastern);
+        LocalTime startLT = (LocalTime) apptStartComboBox.getSelectionModel().getSelectedItem();
+        ZonedDateTime localZDT = startZDT.withZoneSameInstant(localZoneId);
+        ZonedDateTime localStartZDT = ZonedDateTime.of(localZDT.toLocalDate(), startLT, localZoneId);
+        ZonedDateTime endZDT = ZonedDateTime.of(LocalDate.now(), LocalTime.of(22,0), eastern);
+        ZonedDateTime localEndZDT = endZDT.withZoneSameInstant(localZoneId);
+        apptEndComboBox.setValue(null);
         apptEndComboBox.getItems().clear();
-        while (start.isBefore(end.plusMinutes(-14))) {
-            start = start.plusMinutes(15);
-            apptEndComboBox.getItems().add(start);
+
+        if ((startLT.isAfter(LocalTime.of(0,0)) && (startLT.isBefore(LocalTime.of(14,0)))) || startLT.equals(LocalTime.of(0,0))) {
+            localStartZDT = localStartZDT.plusDays(1);
+            while (localStartZDT.toLocalTime().isBefore(localEndZDT.toLocalTime().plusMinutes(-14))) {
+                localStartZDT = localStartZDT.plusMinutes(15);
+                apptEndComboBox.getItems().add(localStartZDT.toLocalTime());
+            }
+        } else {
+            while (localStartZDT.isBefore(localEndZDT.plusMinutes(-14))) {
+                localStartZDT = localStartZDT.plusMinutes(15);
+                apptEndComboBox.getItems().add(localStartZDT.toLocalTime());
+            }
         }
+
+//        populateTimeComboBoxes();
+//
+//        LocalTime start = (LocalTime) apptStartComboBox.getSelectionModel().getSelectedItem();
+//
+//        LocalTime end = LocalTime.of(22, 0);
+//
+//        apptEndComboBox.getItems().clear();
+//        while (start.isBefore(end.plusMinutes(-14))) {
+//            start = start.plusMinutes(15);
+//            apptEndComboBox.getItems().add(start);
+//        }
     }
 
-    public void onApptCountryComboBox(ActionEvent event) {
+    /**
+     * this onAction method dynamically updates the country division ComboBox based on the country ComboBox selection.
+     */
+    public void onApptCountryComboBox() {
         Country loc = (Country) apptCountryComboBox.getSelectionModel().getSelectedItem();
         System.out.println(loc);
         try {

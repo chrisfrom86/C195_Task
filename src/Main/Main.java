@@ -6,6 +6,12 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
+/**
+ * @author Christopher Sequeira
+ * @version 1.95
+ *
+ * This program is for the C195 course at WGU. It is an appointment program.
+ */
 public class Main extends Application {
 
     @Override

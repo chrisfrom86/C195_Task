@@ -4,6 +4,11 @@ import Location.*;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 
+/**@author Chris Sequeira
+ *
+ *
+ * the Customer class is for storing customer info from the database in Java Objects.
+ */
 public class Customer {
     public IntegerProperty customerID;
     public String customerName;
@@ -16,6 +21,10 @@ public class Customer {
     public Customer() {
     }
 
+    /**
+     * The toString() function is overridden to correctly populate ComboBoxes in the add/modify appointment forms.
+     * @return
+     */
     @Override
     public String toString(){ return (customerName); }
 

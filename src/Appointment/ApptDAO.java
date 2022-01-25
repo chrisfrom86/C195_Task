@@ -12,8 +12,17 @@ import java.util.TimeZone;
 import static Contact.ContactDAO.getContactIDByName;
 import static Login.LoginDAO.getUsernameByID;
 
+/**
+ * @author Chris Sequeira
+ * this data access object queries and interacts with the appointments table of the database.
+ */
 public class ApptDAO {
 
+    /**
+     * this method returns all entries from the appointments table.
+     * @return all appointments are returned as Appointment objects in an ObservableList.
+     * @throws Exception
+     */
     public static ObservableList<Appointment> getAllAppointments() throws Exception {
         String sql = "select * from appointments";
         ObservableList<Appointment> apptList = FXCollections.observableArrayList();
@@ -58,18 +67,33 @@ public class ApptDAO {
         return apptList;
     }
 
+    /**
+     * this method gets all appointments with a start or end date within 15 minutes of login.
+     *
+     * The time is converted from system local time to gmt before sending the query to the database.
+     *
+     * this method is called when the {@link ApptWarning} is called.
+     * @return an ObservableList of Appointment objects is returned.
+     * @throws SQLException
+     */
     public static ObservableList<Appointment> get15MinUpcomingAppts() throws SQLException {
         DB.getConnection();
+        ZoneId gmtZoneId = ZoneId.of("Europe/London"); //gmt
+
         ObservableList<Appointment> soonAppts = FXCollections.observableArrayList();
-        String sql = "select * from appointments where start between now() and date_sub(now(), interval -15 minute);";
+        String sql = "select * from appointments where start between ? and date_sub(?, interval -15 minute);";
         PreparedStatement ps = DB.getConnection().prepareStatement(sql);
+        ZonedDateTime nowLocalZDT = ZonedDateTime.now();
+        ZonedDateTime nowGMTZDT = nowLocalZDT.withZoneSameInstant(gmtZoneId);
+        Timestamp nowLocalTS = Timestamp.valueOf(nowGMTZDT.toLocalDateTime());
+        ps.setString(1, nowLocalTS.toString());
+        ps.setString(2, nowLocalTS.toString());
         ResultSet rs = ps.executeQuery();
 
         while (rs.next()) {
             Appointment appt = new Appointment();
             appt.setApptID(rs.getInt("appointment_id"));
             Timestamp startTS = (rs.getTimestamp("start"));
-            ZoneId gmtZoneId = ZoneId.of("Europe/London"); //gmt
             ZoneId localZoneId = TimeZone.getDefault().toZoneId(); //local
             ZonedDateTime apptStartFromDB = ZonedDateTime.of(startTS.toLocalDateTime().toLocalDate(), startTS.toLocalDateTime().toLocalTime(), gmtZoneId);
             ZonedDateTime apptStartLocal = apptStartFromDB.withZoneSameInstant(localZoneId);
@@ -80,6 +104,13 @@ public class ApptDAO {
         return soonAppts;
     }
 
+    /**
+     * this method gets all appointments within 1 month of the current local time.
+     *
+     * this method is called when the radio button is selected on {@link AppointmentView}.
+     * @return an ObservableList of Appointments is returned to populate the TableView in {@link AppointmentView}.
+     * @throws SQLException
+     */
     public static ObservableList<Appointment> get1MonthUpcomingAppts() throws SQLException {
         DB.getConnection();
         ObservableList<Appointment> soonAppts = FXCollections.observableArrayList();
@@ -116,6 +147,13 @@ public class ApptDAO {
         return soonAppts;
     }
 
+    /**
+     * this method gets all appointments within 1 week of the current local time.
+     *
+     * this method is called when the radio button is selected on {@link AppointmentView}.
+     * @return an ObservableList of Appointments is returned to populate the TableView in {@link AppointmentView}.
+     * @throws SQLException
+     */
     public static ObservableList<Appointment> get1WeekUpcomingAppts() throws SQLException {
         DB.getConnection();
         ObservableList<Appointment> soonAppts = FXCollections.observableArrayList();
@@ -151,6 +189,13 @@ public class ApptDAO {
         return soonAppts;
     }
 
+    /**
+     * this method gets all appointments based on a Customer selected from a ComboBox in {@link AppointmentView}.
+     *
+     * {@param name} is provided from the ComboBox and passed into a PreparedStatement before querying the database.
+     * @return an ObservableList of Appointments is returned to populate the TableView in {@link AppointmentView}.
+     * @throws SQLException
+     */
     public static ObservableList<Appointment> getApptsByCustomer(String name) throws SQLException {
         DB.getConnection();
         ObservableList<Appointment> custAppts = FXCollections.observableArrayList();
@@ -188,11 +233,47 @@ public class ApptDAO {
         return custAppts;
     }
 
+    /**
+     * this method queries the appointments table with a {@param start} and {@param end} time, and if either are within a current appointment's time, returns false.
+     *
+     * @return boolean is true if there are no overlapping appointments found, false if any overlapping appointments are found.
+     * @throws SQLException
+     */
+    public static boolean checkApptOverlapByCustomer(ZonedDateTime start, ZonedDateTime end) throws SQLException {
+        boolean apptsOverlap = true;
+
+        DB.getConnection();
+        String sql = "select * from appointments where ((? between start and end) or (? between start and end));";
+        PreparedStatement ps = DB.getConnection().prepareStatement(sql);
+        ZoneId gmtZoneId = ZoneId.of("Europe/London"); //gmt
+        ZonedDateTime startZDT = start.withZoneSameInstant(gmtZoneId);
+        Timestamp startTS = Timestamp.valueOf(startZDT.toLocalDateTime());
+        ps.setTimestamp(1, startTS);
+        ZonedDateTime endZDT = end.withZoneSameInstant(gmtZoneId);
+        Timestamp endTS = Timestamp.valueOf(endZDT.toLocalDateTime());
+        ps.setTimestamp(2, endTS);
+        ResultSet rs = ps.executeQuery();
+
+        while (rs.next()) {
+            apptsOverlap = false;
+        }
+
+        return apptsOverlap;
+    }
+
+    /**
+     * this method queries the appointments table with a {@param start} and {@param end} time, and if either are within a current appointment's time, returns false.
+     *
+     * This method also has {@param id} because it is called in {@link ModifyAppointment} based on a given existing Appointment.
+     *
+     * @return boolean is true if there are no overlapping appointments found, false if any overlapping appointments are found.
+     * @throws SQLException
+     */
     public static boolean checkApptOverlapByCustomer(int id, ZonedDateTime start, ZonedDateTime end) throws SQLException {
         boolean apptsOverlap = true;
 
         DB.getConnection();
-        String sql = "select * from appointments where customer_id = ? and ((? between start and end) or (? between start and end));";
+        String sql = "select * from appointments where not appointment_id = ? and ((? between start and end) or (? between start and end));";
         PreparedStatement ps = DB.getConnection().prepareStatement(sql);
         ps.setInt(1, id);
         ZoneId gmtZoneId = ZoneId.of("Europe/London"); //gmt
@@ -211,6 +292,22 @@ public class ApptDAO {
         return apptsOverlap;
     }
 
+    /**
+     * This method accepts validated inputs from {@link AddAppointment} and inserts them into the appointments table.
+     *
+     * A new appointment_ID is generated in the database based on an AutoIncrement column.
+     *
+     * @param title
+     * @param description
+     * @param contactID
+     * @param loc
+     * @param type
+     * @param start
+     * @param end
+     * @param customerID
+     * @param userID
+     * @throws SQLException
+     */
     public static void addAppointment(String title, String description, int contactID, String loc, String type, ZonedDateTime start, ZonedDateTime end, int customerID, int userID) throws SQLException {
         DB.getConnection();
         String sql = "INSERT INTO appointments(title, description, location, type, start, end, create_date, created_by, last_update, last_updated_by, customer_id, user_id, contact_id)" +
@@ -236,6 +333,22 @@ public class ApptDAO {
         pst.executeUpdate();
     }
 
+    /**
+     * This method accepts validated inputs from {@link ModifyAppointment} and updates an entry in the appointments table.
+     *
+     * The appointment updated is based on the appointment_id passed as {@param apptID}.
+     *
+     * @param title
+     * @param description
+     * @param contactID
+     * @param loc
+     * @param type
+     * @param start
+     * @param end
+     * @param customerID
+     * @param userID
+     * @throws SQLException
+     */
     public static void updateAppointment(int apptID, String title, String description, int contactID, String loc, String type, ZonedDateTime start, ZonedDateTime end, int customerID, int userID) throws SQLException {
         DB.getConnection();
         String sql = "update appointments set title = ?, description = ?, location = ?, type = ?, start = ?, end = ?, last_update = NOW(), last_updated_by = ?, customer_id = ?, user_id = ?, contact_id = ?" +
@@ -268,6 +381,12 @@ public class ApptDAO {
         pst.executeUpdate();
     }
 
+    /**
+     * this method queries the database for an appointment with the given {@param id} and deletes it.
+     * @param id
+     * @return if successful, a confirmation message is returned; if failed, an error message is returned.
+     * @throws SQLException
+     */
     public static String deleteAppointment(int id) throws SQLException {
         DB.getConnection();
         try {
@@ -281,6 +400,13 @@ public class ApptDAO {
         }
     }
 
+    /**
+     * This is an overloaded method for generating a report.
+     *
+     * This method returns all appointments when no selections are made.
+     * @return Integer equal to the number of appointments found in the query.
+     * @throws SQLException
+     */
     public static int getApptReport() throws SQLException {
         String sql = "select * from appointments";
         int apptReport = 0;
@@ -294,6 +420,13 @@ public class ApptDAO {
         return apptReport;
     }
 
+    /**
+     * This is an overloaded method for generating a report.
+     *
+     * This method returns all appointments based on a given {@param month}.
+     * @return Integer equal to the number of appointments found in the query.
+     * @throws SQLException
+     */
     public static int getApptReport(int month) throws SQLException {
         String sql = "select * from appointments where month(start) = ?";
         int apptReport = 0;
@@ -308,6 +441,13 @@ public class ApptDAO {
         return apptReport;
     }
 
+    /**
+     * This is an overloaded method for generating a report.
+     *
+     * This method returns all appointments based on a given {@param type}.
+     * @return Integer equal to the number of appointments found in the query.
+     * @throws SQLException
+     */
     public static int getApptReport(String type) throws SQLException {
         String sql = "select * from appointments where type = ?";
         int apptReport = 0;
@@ -322,6 +462,13 @@ public class ApptDAO {
         return apptReport;
     }
 
+    /**
+     * This is an overloaded method for generating a report.
+     *
+     * This method returns all appointments based on a given {@param contact}.
+     * @return Integer equal to the number of appointments found in the query.
+     * @throws SQLException
+     */
     public static int getApptReport(Contact contact) throws SQLException {
         String sql = "select * from appointments where contact_id = ?";
         int apptReport = 0;
@@ -337,6 +484,13 @@ public class ApptDAO {
         return apptReport;
     }
 
+    /**
+     * This is an overloaded method for generating a report.
+     *
+     * This method returns all appointments based on a given {@param month} and {@param type}.
+     * @return Integer equal to the number of appointments found in the query.
+     * @throws SQLException
+     */
     public static int getApptReport(int month, String type) throws SQLException {
         String sql = "select * from appointments where month(start) = ? and type = ?";
         int apptReport = 0;
@@ -352,6 +506,13 @@ public class ApptDAO {
         return apptReport;
     }
 
+    /**
+     * This is an overloaded method for generating a report.
+     *
+     * This method returns all appointments based on a given {@param type} and {@param contact}.
+     * @return Integer equal to the number of appointments found in the query.
+     * @throws SQLException
+     */
     public static int getApptReport(String type, Contact contact) throws SQLException {
         String sql = "select * from appointments where type = ? and contact_id = ?";
         int apptReport = 0;
@@ -368,6 +529,13 @@ public class ApptDAO {
         return apptReport;
     }
 
+    /**
+     * This is an overloaded method for generating a report.
+     *
+     * This method returns all appointments based on a given {@param month} and {@param contact}.
+     * @return Integer equal to the number of appointments found in the query.
+     * @throws SQLException
+     */
     public static int getApptReport(int month, Contact contact) throws SQLException {
         String sql = "select * from appointments where month(start) = ? and contact_id = ?";
         int apptReport = 0;
@@ -384,6 +552,13 @@ public class ApptDAO {
         return apptReport;
     }
 
+    /**
+     * This is an overloaded method for generating a report.
+     *
+     * This method returns all appointments based on a given {@param month}, {@param type}, and {@param contact}.
+     * @return Integer equal to the number of appointments found in the query.
+     * @throws SQLException
+     */
     public static int getApptReport(int month, String type, Contact contact) throws SQLException {
         String sql = "select * from appointments where month(start) = ? and type = ? and contact_id = ?";
         int apptReport = 0;

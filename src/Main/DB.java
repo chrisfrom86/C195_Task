@@ -1,10 +1,5 @@
 package Main;
 
-import Appointment.Appointment;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-
-import javax.sql.rowset.CachedRowSet;
 import java.sql.*;
 
 public class DB {

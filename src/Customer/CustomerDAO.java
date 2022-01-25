@@ -13,8 +13,18 @@ import java.sql.SQLIntegrityConstraintViolationException;
 
 import static Location.LocDAO.*;
 
+/**
+ * @author Chris Sequeira
+ *
+ * The CustomerDAO class is the data access object for getting info from the customers table.
+ */
 public class CustomerDAO {
 
+    /**
+     * this method queries all entries in the customers table and loads each Customer into an observable list.
+     * @return
+     * @throws Exception
+     */
     public static ObservableList<Customer> getAllCustomers() throws Exception {
         String sql = "select * from customers, first_level_divisions where customers.division_id = first_level_divisions.division_id";
         ObservableList<Customer> custList = FXCollections.observableArrayList();
@@ -53,6 +63,12 @@ public class CustomerDAO {
         return custList;
     }
 
+    /**
+     * this method gets all info about a customer from the customers table based on a given ID {@param id} and stores it into a Customer object.
+     *
+     * @return single Customer object populated with information from the customers table based on a given ID.
+     * @throws Exception
+     */
     public static Customer getCustomerByID(int id) throws Exception {
         DB.getConnection();
         String sql = "select * from customers where customer_id = ?";
@@ -74,6 +90,15 @@ public class CustomerDAO {
         return result;
     }
 
+    /**
+     * This method takes validated information about a customer and parses it into a PreparedStatement, then inserts it into the database.
+     * @param name
+     * @param address
+     * @param postalCode
+     * @param phone
+     * @param div
+     * @throws SQLException
+     */
     public static void addCustomer(String name, String address, String postalCode, String phone, CountryDivision div) throws SQLException {
         DB.getConnection();
         String sql = "INSERT INTO customers(customer_name, address, postal_code, phone, create_date, created_by, last_update, last_updated_by, division_id)" +
@@ -92,6 +117,16 @@ public class CustomerDAO {
         ps.executeUpdate();
     }
 
+    /**
+     * This method takes validated information about a customer and parses it into a PreparedStatement, then updates the database based on a given {@param id}.
+     * @param id
+     * @param name
+     * @param address
+     * @param postalCode
+     * @param phone
+     * @param div
+     * @throws SQLException
+     */
     public static void updateCustomer(int id, String name, String address, String postalCode, String phone, CountryDivision div) throws SQLException {
         DB.getConnection();
         String sql = "update customers set customer_name = ?, address = ?, postal_code = ?, phone= ?, last_update = NOW(), last_updated_by = ?, division_id = ? where customer_id = ?";
@@ -108,6 +143,14 @@ public class CustomerDAO {
         ps.executeUpdate();
     }
 
+    /**
+     * this method deletes a row from the customers table based on a given {@param id}.
+     *
+     * if a customer has appointments, it will throw a SQL exception based on foreign key constraints.
+     * @param id
+     * @return if successful, a String is returned confirming the ID of the deleted Customer. if failed due to existing appointments, an error String is returned.
+     * @throws SQLException
+     */
     public static String deleteCustomer(int id) throws SQLException {
         DB.getConnection();
         try {

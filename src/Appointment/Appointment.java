@@ -11,6 +11,12 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
 
+/**
+ * @author Chris Sequeira
+ * the Appointment class defines the Appointment objects, which are the centerpiece of this application.
+ *
+ * Each appointment has multiple properties, notably custom objects defined in other packages throughout this application.
+ */
 public class Appointment {
     public IntegerProperty apptID;
     public String apptTitle;

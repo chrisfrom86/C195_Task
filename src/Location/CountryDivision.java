@@ -3,6 +3,12 @@ package Location;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 
+/**
+ * @author Chris Sequeira
+ *
+ * The CountryDivision class is for first level divisions (state, province, etc) from the database.
+ * They take an Integer for countryID (foreign key to country table), Integer for divisionID, and String for division (name).
+ */
 public class CountryDivision {
     public IntegerProperty divisionID;
     public String division;
@@ -13,6 +19,9 @@ public class CountryDivision {
         this.division = new String();
     }
 
+    /**
+     * this method overrides the toString() method for when CountryDivision objects are populated into ComboBoxes.
+     */
     @Override
     public String toString(){ return (division); }
 

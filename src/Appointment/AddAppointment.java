@@ -5,14 +5,13 @@ import Customer.Customer;
 import Location.Country;
 import Location.CountryDivision;
 import Login.Login;
-import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.net.URL;
-import java.sql.Timestamp;
+import java.sql.SQLException;
 import java.time.*;
 import java.util.ResourceBundle;
 import java.util.TimeZone;
@@ -23,6 +22,13 @@ import static Customer.CustomerDAO.getAllCustomers;
 import static Location.LocDAO.*;
 import static Login.Login.loggedInUserID;
 
+/**
+ * @author Chris Sequeira
+ *
+ * this class controls the AddAppointment.fxml form.
+ *
+ * It allows users to add new appointments based on validated inputs that will be passed to {@link ApptDAO}.
+ */
 public class AddAppointment implements Initializable {
     public TextField apptIDTextField;
     public TextField apptTitleTextField;
@@ -40,6 +46,18 @@ public class AddAppointment implements Initializable {
     public ComboBox apptCountryDivisionComboBox;
     public ComboBox apptContactComboBox;
 
+    /**
+     * this method populates the Customer, Country, and Contact ComboBoxes with all relevant items as an ObservableList.
+     *
+     * the country division (first level division) ComboBox is limited to show 10 items at a time.
+     *
+     * The appointment type ComboBox is populated with the options Work and Personal.
+     *
+     * the cancel button onAction is handled by a lambda function that shows {@link AppointmentView} and closes the current stage.
+     *
+     * @param url
+     * @param resourceBundle
+     */
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         System.out.println("AddAppointment - initialized");
@@ -66,12 +84,29 @@ public class AddAppointment implements Initializable {
         populateTypeComboBox();
 
         apptUserIDTextField.setText(String.valueOf(loggedInUserID));
+
+        apptCancelButton.setOnAction(e-> {
+            System.out.println("AddAppointment - Add Appt Cancel button clicked");
+            try {
+                Login.showApptView();
+            } catch (IOException ioException) {
+                System.out.println("AddAppointment - IOException on cancel button click");
+            }
+            Stage stage = (Stage) apptCancelButton.getScene().getWindow();
+            stage.close();
+        });
     }
 
+    /**
+     * this method populates the appointment type ComboBox with two predetermined options.
+     */
     public void populateTypeComboBox() {
         apptTypeComboBox.getItems().addAll("Work", "Personal");
     }
 
+    /**
+     * this method populates the time ComboBoxes with the company hours from 0800-2200 EST, converted to system local hours.
+     */
     public void populateTimeComboBoxes() {
         ZoneId eastern = ZoneId.of("America/New_York");  //eastern
         ZonedDateTime startZDT = ZonedDateTime.of(LocalDate.now(), LocalTime.of(8,0), eastern);
@@ -87,6 +122,9 @@ public class AddAppointment implements Initializable {
         }
     }
 
+    /**
+     * this method validates all information provided for the appointment to create, then passes the information to {@link ApptDAO}.
+     */
     public void onApptSaveButton() throws Exception {
         System.out.println("AddAppointment - appt save button clicked");
         errorLabel.setText("");
@@ -144,6 +182,7 @@ public class AddAppointment implements Initializable {
             try {
                 startTimeZDT = ZonedDateTime.of(apptDate, startTime, localZoneId);
             } catch (Exception e) {
+                System.out.println(e);
             }
         }
 
@@ -156,6 +195,7 @@ public class AddAppointment implements Initializable {
             try {
                 endTimeZDT = ZonedDateTime.of(apptDate, endTime, localZoneId);
             } catch (Exception e) {
+                System.out.println(e);
             }
         }
 
@@ -169,12 +209,12 @@ public class AddAppointment implements Initializable {
         }
 
         if (addConfirm) {
-            if (!checkApptOverlapByCustomer(customerID, startTimeZDT, endTimeZDT)) {
+            if (!checkApptOverlapByCustomer(startTimeZDT, endTimeZDT)) {
                 errorLabel.setText(errorLabel.getText() + "Selected time overlaps another appointment. ");
             }
         }
 
-        if (addConfirm && checkApptOverlapByCustomer(customerID, startTimeZDT, endTimeZDT)) {
+        if (addConfirm && checkApptOverlapByCustomer(startTimeZDT, endTimeZDT)) {
             addAppointment(title, description, contactID, location, type, startTimeZDT, endTimeZDT, customerID, loggedInUserID);
             errorLabel.setText("New appointment added");
             Login.showApptView();
@@ -183,13 +223,18 @@ public class AddAppointment implements Initializable {
         }
     }
 
-    public void onApptCancelButton(ActionEvent event) throws IOException {
-        System.out.println("AddAppointment - Add Appt Cancel button clicked");
-        Login.showApptView();
-        Stage stage = (Stage) apptCancelButton.getScene().getWindow();
-        stage.close();
-    }
+    /**
+     * @deprecated this onAction method was previously used to handle clicks of the button, but this is now handled in a lambda expression in initialize.
+     */
+   public void onApptCancelButton() {}
+//        System.out.println("AddAppointment - Add Appt Cancel button clicked");
+//        Login.showApptView();
+//        Stage stage = (Stage) apptCancelButton.getScene().getWindow();
+//        stage.close();
 
+    /**
+     * this onAction method dynamically updates the country division ComboBox based on the country ComboBox selection.
+     */
     public void onApptCountryComboBox() throws Exception {
         Country loc = (Country) apptCountryComboBox.getSelectionModel().getSelectedItem();
         System.out.println(loc);
@@ -200,7 +245,10 @@ public class AddAppointment implements Initializable {
         }
     }
 
-    public void onApptStartTimeComboBox(ActionEvent event) {
+    /**
+     * this onAction method dynamically updates the end time ComboBox based on the selection of the start time ComboBox.
+     */
+    public void onApptStartTimeComboBox() {
         //populateTimeComboBoxes();
 
         ZoneId eastern = ZoneId.of("America/New_York");  //eastern

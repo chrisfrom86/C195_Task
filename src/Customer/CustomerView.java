@@ -18,6 +18,10 @@ import static Customer.CustomerDAO.*;
 import static Location.LocDAO.getAllCountries;
 import static Location.LocDAO.getAllDivisionsByCountryID;
 
+/**
+ * @author Chris Sequeira
+ * The CustomerView class utilizes the CustomerView.fxml to display Customer information from the customers table.
+ */
 public class CustomerView implements Initializable {
     public TableView customerTableView;
     public Button apptViewButton;
@@ -40,6 +44,11 @@ public class CustomerView implements Initializable {
     public Button customerDeleteButton;
     public Button editSelectionButton;
 
+    /**
+     * this method populates the columns, and then populates the rows. it also populates the Country ComboBox with countries from the database.
+     * @param url
+     * @param resourceBundle
+     */
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         System.out.println("CustomerView - initialized");
@@ -61,6 +70,9 @@ public class CustomerView implements Initializable {
         errorLabel.setText(defaultErrorLabelText());
     }
 
+    /**
+     * this method populates the TableView with all customers, and is called any time the table needs to be updated.
+     */
     public void setCustomerTableView() {
         try {
             customerTableView.setItems(getAllCustomers());
@@ -69,8 +81,12 @@ public class CustomerView implements Initializable {
         }
     }
 
+    /**
+     * This method is called whenever a customer is selected using the Select Customer button.
+     * @param cust
+     * @throws Exception
+     */
     public void populateTextFields(Customer cust) throws Exception {
-        //System.out.println("Selected Customer - ID: " + cust.getCustomerID() + "; Name: " + cust.customerName);
         custIDTextField.setText(cust.customerID.getValue().toString());
         custNameTextField.setText(cust.getCustomerName());
         custPhoneTextField.setText(cust.getCustomerPhone());
@@ -81,6 +97,9 @@ public class CustomerView implements Initializable {
         custCountryDivisionComboBox.getSelectionModel().select(cust.getCustomerCountryDivision());
     }
 
+    /**
+     * this method clears all the text fields in the stage.
+     */
     public void clearTextFields() {
         custIDTextField.clear();
         custNameTextField.clear();
@@ -99,22 +118,37 @@ public class CustomerView implements Initializable {
         custCountryDivisionComboBox.setPromptText("Select location");
     }
 
+    /**
+     * this method provides the instructions for the form. it is called whenever there is nothing else in the errorLabel so the user knows how to use the form.
+     * @return
+     */
     public String defaultErrorLabelText() {
         return "Select a customer and click Select Customer.\nOr enter customer info and click Add Customer.";
     }
 
+    /**
+     * This method disables the update/delete buttons. it is called if no customer is selected, so that users cannot accidentally try to update/delete a null selection.
+     */
     public void disableUpdateDeleteButtons() {
         customerAddButton.setDisable(false);
         customerUpdateButton.setDisable(true);
         customerDeleteButton.setDisable(true);
     }
 
+    /**
+     * this method disables the add button. it is called when a customer is selected, so that a customer is not accidentally duplicated after being selected.
+     */
     public void disableAddButton() {
         customerAddButton.setDisable(true);
         customerUpdateButton.setDisable(false);
         customerDeleteButton.setDisable(false);
     }
 
+    /**
+     * this method closes the current stage and opens the AppointmentView form.
+     * @param event
+     * @throws IOException
+     */
     public void onApptViewButton(ActionEvent event) throws IOException {
         System.out.println("CustomerView - Add Appt Cancel button clicked");
         Login.showApptView();
@@ -122,6 +156,9 @@ public class CustomerView implements Initializable {
         stage.close();
     }
 
+    /**
+     * this method populates all countries from the database into the country ComboBox.
+     */
     public void setCustCountryComboBox() {
         try {
             custCountryComboBox.setItems(getAllCountries());
@@ -130,6 +167,9 @@ public class CustomerView implements Initializable {
         }
     }
 
+    /**
+     * this method populates all first level divisions from the database based on the countryComboBox selection.
+     */
     public void onCustCountryComboBox() {
         Country loc = new Country();
         try {
@@ -137,7 +177,6 @@ public class CustomerView implements Initializable {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        //System.out.println(loc + " selected in countryComboBox, loc.getCountryID = " + loc.getCountryID());
         try {
             custCountryDivisionComboBox.getItems().setAll(getAllDivisionsByCountryID(loc.getCountryID()));
         } catch (Exception e) {
@@ -145,6 +184,10 @@ public class CustomerView implements Initializable {
         }
     }
 
+    /**
+     * this method validates the input is not null or empty and then adds the validated customer info to the database by calling addCustomer from {@link CustomerDAO}.
+     * @throws Exception
+     */
     public void onCustomerAddButton() throws Exception {
         System.out.println("CustomerView - add customer button clicked");
         errorLabel.setText("");
@@ -189,6 +232,10 @@ public class CustomerView implements Initializable {
         }
     }
 
+    /**
+     * this method validates the input from the form and passes the information to updateCustomer from {@link CustomerDAO}.
+     * @throws Exception
+     */
     public void onCustomerUpdateButton() throws Exception {
         System.out.println("CustomerView - update customer button clicked");
         int id = Integer.parseInt(custIDTextField.getText());
@@ -206,6 +253,10 @@ public class CustomerView implements Initializable {
         disableUpdateDeleteButtons();
     }
 
+    /**
+     * this method gets the selected customer from the form and passes the ID to deleteCustomer from {@link CustomerDAO}.
+     * @throws Exception
+     */
     public void onCustomerDeleteButton(ActionEvent event) throws Exception {
         System.out.println("CustomerView - delete customer button clicked");
         int id = Integer.parseInt(custIDTextField.getText());
@@ -216,6 +267,10 @@ public class CustomerView implements Initializable {
         disableUpdateDeleteButtons();
     }
 
+    /**
+     * This method clears all TextFields in the form
+     * @param event
+     */
     public void onClearSelectionButton(ActionEvent event) {
         System.out.println("CustomerView - clear selection button clicked");
         customerTableView.getSelectionModel().clearSelection();
@@ -224,6 +279,9 @@ public class CustomerView implements Initializable {
         errorLabel.setText(defaultErrorLabelText());
     }
 
+    /**
+     * this method pulls all info from the row selected in the TableView and populates the TextFields with the selected Customer's information.
+     */
     public void onEditSelectionButton() {
         try {
             Customer cust = (Customer) customerTableView.getSelectionModel().getSelectedItem();
