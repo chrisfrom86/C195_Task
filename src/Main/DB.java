@@ -3,10 +3,10 @@ package Main;
 import java.sql.*;
 
 public class DB {
-    private static final String databaseName="c195pa";
+    private static final String databaseName="client_schedule";
     private static final String DB_URL="jdbc:mysql://localhost:3306/"+databaseName;
-    private static final String username="root";
-    private static final String password="password";
+    private static final String username="sqlUser";
+    private static final String password="Passw0rd!";
     private static final String MYSQLJDBCDriver = "com.mysql.cj.jdbc.Driver";
     static Connection conn;
 
