@@ -13,10 +13,7 @@ import javafx.stage.Stage;
 import java.io.IOException;
 import java.net.URL;
 import java.sql.SQLException;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.util.ResourceBundle;
 import java.util.TimeZone;
 
@@ -217,6 +214,9 @@ public class ModifyAppointment implements Initializable {
         } else {
             try {
                 endTimeZDT = ZonedDateTime.of(apptDate, endTime, localZoneId);
+                if (endTimeZDT.isBefore(startTimeZDT)) {
+                    endTimeZDT = endTimeZDT.plusDays(1);
+                }
             } catch (Exception e) {
             }
         }
@@ -265,27 +265,42 @@ public class ModifyAppointment implements Initializable {
         ZoneId eastern = ZoneId.of("America/New_York");  //eastern
         ZoneId localZoneId = TimeZone.getDefault().toZoneId(); //local
 
-        ZonedDateTime startZDT = ZonedDateTime.of(LocalDate.now(), LocalTime.of(8,0), eastern);
-        LocalTime startLT = (LocalTime) apptStartComboBox.getSelectionModel().getSelectedItem();
-        ZonedDateTime localZDT = startZDT.withZoneSameInstant(localZoneId);
-        ZonedDateTime localStartZDT = ZonedDateTime.of(localZDT.toLocalDate(), startLT, localZoneId);
-        ZonedDateTime endZDT = ZonedDateTime.of(LocalDate.now(), LocalTime.of(22,0), eastern);
-        ZonedDateTime localEndZDT = endZDT.withZoneSameInstant(localZoneId);
-        apptEndComboBox.setValue(null);
-        apptEndComboBox.getItems().clear();
+        LocalTime startLT = (LocalTime) apptStartComboBox.getSelectionModel().getSelectedItem(); //gets the selected time and casts to LocalTime object, will always be a local time
+        LocalDateTime startLDT = LocalDateTime.of(LocalDate.now(), startLT); //converts the selected LocalTime into a LocalDateTime
+        ZonedDateTime startZDT = ZonedDateTime.of(LocalDate.now(), LocalTime.of(8,0), eastern); //gets 0800 eastern time
+        ZonedDateTime localZDT = startZDT.withZoneSameInstant(localZoneId); //converts 0800 eastern to local time
+        ZonedDateTime localEnd = localZDT.plusHours(14); //adds 14 hours to localized start time. by doing this in ZonedDateTime, it accounts for the business hours going into the next day
 
-        if ((startLT.isAfter(LocalTime.of(0,0)) && (startLT.isBefore(LocalTime.of(14,0)))) || startLT.equals(LocalTime.of(0,0))) {
-            localStartZDT = localStartZDT.plusDays(1);
-            while (localStartZDT.toLocalTime().isBefore(localEndZDT.toLocalTime().plusMinutes(-14))) {
-                localStartZDT = localStartZDT.plusMinutes(15);
-                apptEndComboBox.getItems().add(localStartZDT.toLocalTime());
-            }
-        } else {
-            while (localStartZDT.isBefore(localEndZDT.plusMinutes(-14))) {
-                localStartZDT = localStartZDT.plusMinutes(15);
-                apptEndComboBox.getItems().add(localStartZDT.toLocalTime());
-            }
+        LocalDateTime endLDT = LocalDateTime.of(localEnd.toLocalDate(), localEnd.toLocalTime()); //converts the end time ZonedDateTime into a LocalDateTime for comparison to the selected start appointment start time
+
+        apptEndComboBox.getItems().clear(); //clears items in end time combobox
+
+        while (startLDT.isBefore(endLDT)) {
+            startLDT = startLDT.plusMinutes(15);
+            apptEndComboBox.getItems().add(startLDT.toLocalTime());
         }
+
+//        ZonedDateTime startZDT = ZonedDateTime.of(LocalDate.now(), LocalTime.of(8,0), eastern);
+//        LocalTime startLT = (LocalTime) apptStartComboBox.getSelectionModel().getSelectedItem();
+//        ZonedDateTime localZDT = startZDT.withZoneSameInstant(localZoneId);
+//        ZonedDateTime localStartZDT = ZonedDateTime.of(localZDT.toLocalDate(), startLT, localZoneId);
+//        ZonedDateTime endZDT = ZonedDateTime.of(LocalDate.now(), LocalTime.of(22,0), eastern);
+//        ZonedDateTime localEndZDT = endZDT.withZoneSameInstant(localZoneId);
+//        apptEndComboBox.setValue(null);
+//        apptEndComboBox.getItems().clear();
+//
+//        if ((startLT.isAfter(LocalTime.of(0,0)) && (startLT.isBefore(LocalTime.of(14,0)))) || startLT.equals(LocalTime.of(0,0))) {
+//            localStartZDT = localStartZDT.plusDays(1);
+//            while (localStartZDT.toLocalTime().isBefore(localEndZDT.toLocalTime().plusMinutes(-14))) {
+//                localStartZDT = localStartZDT.plusMinutes(15);
+//                apptEndComboBox.getItems().add(localStartZDT.toLocalTime());
+//            }
+//        } else {
+//            while (localStartZDT.isBefore(localEndZDT.plusMinutes(-14))) {
+//                localStartZDT = localStartZDT.plusMinutes(15);
+//                apptEndComboBox.getItems().add(localStartZDT.toLocalTime());
+//            }
+//        }
 
 //        populateTimeComboBoxes();
 //

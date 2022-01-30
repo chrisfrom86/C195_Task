@@ -29,7 +29,7 @@ public class LoginDAO extends Login {
     /**
      * checkUsername takes a String {@param username} and checks it against the users table in the database.
      * The SQL command is prepared in a PreparedStatement and submitted to the database.
-     * @return
+     * @return returns a boolean, true if there is a match in the database, false by default
      * @throws SQLException
      */
     public static boolean checkUsername(String username) throws SQLException {
@@ -53,7 +53,7 @@ public class LoginDAO extends Login {
     /**
      * checkPassword takes a String {@param password} and checks it against the users table in the database.
      * The SQL command is prepared in a PreparedStatement and submitted to the database.
-     * @return
+     * @return returns a boolean, true if there is a match in the database, false by default
      * @throws SQLException
      */
     public static boolean checkPassword(String password) throws SQLException {

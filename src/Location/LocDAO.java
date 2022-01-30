@@ -74,7 +74,7 @@ public class LocDAO {
 
     /**
      * this method gets the country of a given division using divisionID {@param id}.
-     * @return
+     * @return Returns the name of a country given its division's divisionID.
      * @throws SQLException
      */
     public static String getCountryOfDivisionByID(int id) throws SQLException {
