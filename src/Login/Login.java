@@ -55,18 +55,30 @@ public class Login implements Initializable {
         passwordTextField.setText("test");
         loginTimeZoneLabel.setText("Time Zone: " + TimeZone.getDefault().getDisplayName());
 
-        Locale locale = new Locale("es", "ES");
-        ResourceBundle rb = ResourceBundle.getBundle("Login/Locale_es", locale);
+        Locale localeES = new Locale("es", "ES");
+        ResourceBundle rbES = ResourceBundle.getBundle("Login/Locale_es", localeES);
+        Locale localeFR = new Locale("fr","FR");
+        ResourceBundle rbFR = ResourceBundle.getBundle("Login/Locale_fr", localeFR);
 
         if (Locale.getDefault().getLanguage().equals("es")) {
-            loginButton.setText(rb.getString("Login"));
-            usernameLabel.setText(rb.getString("Username"));
-            passwordLabel.setText(rb.getString("Password"));
-            usernameTextField.setPromptText(rb.getString("promptUN"));
-            passwordTextField.setPromptText(rb.getString("promptPW"));
-            errorLabel.setText(rb.getString("Guide"));
-            userLocaleLabel.setText(rb.getString("Language"));
-            loginTimeZoneLabel.setText(rb.getString("TimeZone") + TimeZone.getDefault().getDisplayName());
+            loginButton.setText(rbES.getString("Login"));
+            usernameLabel.setText(rbES.getString("Username"));
+            passwordLabel.setText(rbES.getString("Password"));
+            usernameTextField.setPromptText(rbES.getString("promptUN"));
+            passwordTextField.setPromptText(rbES.getString("promptPW"));
+            errorLabel.setText(rbES.getString("Guide"));
+            userLocaleLabel.setText(rbES.getString("Language"));
+            loginTimeZoneLabel.setText(rbES.getString("TimeZone") + TimeZone.getDefault().getDisplayName());
+        }
+        if (Locale.getDefault().getLanguage().equals("en")) {
+            loginButton.setText(rbFR.getString("Login"));
+            usernameLabel.setText(rbFR.getString("Username"));
+            passwordLabel.setText(rbFR.getString("Password"));
+            usernameTextField.setPromptText(rbFR.getString("promptUN"));
+            passwordTextField.setPromptText(rbFR.getString("promptPW"));
+            errorLabel.setText(rbFR.getString("Guide"));
+            userLocaleLabel.setText(rbFR.getString("Language"));
+            loginTimeZoneLabel.setText(rbFR.getString("TimeZone") + TimeZone.getDefault().getDisplayName());
         }
     }
 
@@ -89,9 +101,13 @@ public class Login implements Initializable {
         if (Locale.getDefault().getLanguage().equals("es")) {
             Locale locale = new Locale("es", "ES");
             rb = ResourceBundle.getBundle("Login/Locale_es", locale);
+        } else if (Locale.getDefault().getLanguage().equals("en")) {
+            Locale locale = new Locale("fr", "FR");
+            rb = ResourceBundle.getBundle("Login/Locale_fr", locale);
         } else {
             rb = ResourceBundle.getBundle("Login/Locale", Locale.ENGLISH);
         }
+
         String username = usernameTextField.getText();
         String password = passwordTextField.getText();
         if (tryLogin(username, password)) {
