@@ -70,7 +70,7 @@ public class Login implements Initializable {
             userLocaleLabel.setText(rbES.getString("Language"));
             loginTimeZoneLabel.setText(rbES.getString("TimeZone") + TimeZone.getDefault().getDisplayName());
         }
-        if (Locale.getDefault().getLanguage().equals("en")) {
+        if (Locale.getDefault().getLanguage().equals("fr")) {
             loginButton.setText(rbFR.getString("Login"));
             usernameLabel.setText(rbFR.getString("Username"));
             passwordLabel.setText(rbFR.getString("Password"));
@@ -101,7 +101,7 @@ public class Login implements Initializable {
         if (Locale.getDefault().getLanguage().equals("es")) {
             Locale locale = new Locale("es", "ES");
             rb = ResourceBundle.getBundle("Login/Locale_es", locale);
-        } else if (Locale.getDefault().getLanguage().equals("en")) {
+        } else if (Locale.getDefault().getLanguage().equals("fr")) {
             Locale locale = new Locale("fr", "FR");
             rb = ResourceBundle.getBundle("Login/Locale_fr", locale);
         } else {
